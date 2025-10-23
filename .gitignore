@@ -1,0 +1,19 @@
+# Carpetas de build
+target/
+
+# IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Archivos con credenciales (NO SUBIR)
+.env
+.env.local
+
+# Logs
+*.log
+
+# Sistema operativo
+.DS_Store
+Thumbs.db

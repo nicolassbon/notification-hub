@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: notification-hub-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: notification_hub
+      MYSQL_USER: app_user
+      MYSQL_PASSWORD: app_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - notification-network
+
+  # Aplicación Spring Boot (comentado para fase 2)
+  # app:
+  #   build: .
+  #   container_name: notification-hub-app
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8080:8080"
+  #   environment:
+  #     SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/notification_hub
+  #     SPRING_DATASOURCE_USERNAME: app_user
+  #     SPRING_DATASOURCE_PASSWORD: app_password
+  #   depends_on:
+  #     mysql:
+  #       condition: service_healthy
+  #   networks:
+  #     - notification-network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  notification-network:
+    driver: bridge
