@@ -100,4 +100,8 @@ public class JwtUtils {
         List<String> roles = claims.get("roles", List.class);
         return roles != null ? roles : new ArrayList<>();
     }
+
+    public Long getExpirationTime() {
+        return jwtProperties.getExpiration();
+    }
 }

@@ -1,5 +1,6 @@
 package com.notificationhub.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +19,9 @@ public class ErrorResponse {
     private String message;
     private LocalDateTime timestamp;
     private String path;
+
+    // Solo incluir detalles si no es nulo
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<String> details;
 
     public ErrorResponse(int status, String error, String message, String path) {
