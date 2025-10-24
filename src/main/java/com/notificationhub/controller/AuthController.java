@@ -3,7 +3,7 @@ package com.notificationhub.controller;
 import com.notificationhub.dto.request.LoginRequest;
 import com.notificationhub.dto.request.RegisterRequest;
 import com.notificationhub.dto.response.AuthResponse;
-import com.notificationhub.service.AuthService;
+import com.notificationhub.service.IAuthService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -14,9 +14,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/auth")
 @Slf4j
 public class AuthController {
-    private final AuthService authService;
+    private final IAuthService authService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(IAuthService authService) {
         this.authService = authService;
     }
 

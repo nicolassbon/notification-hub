@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 
 @Service
 @Slf4j
-public class AuthService {
+public class AuthService implements IAuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
