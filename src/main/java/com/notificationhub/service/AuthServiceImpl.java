@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 
 @Service
 @Slf4j
-public class AuthService implements IAuthService {
+public class AuthServiceImpl implements IAuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -30,11 +30,11 @@ public class AuthService implements IAuthService {
     private final AuthenticationManager authenticationManager;
     private final SecurityUtils securityUtils;
 
-    public AuthService(UserRepository userRepository,
-                       PasswordEncoder passwordEncoder,
-                       JwtUtils jwtUtils,
-                       AuthenticationManager authenticationManager,
-                       SecurityUtils securityUtils) {
+    public AuthServiceImpl(UserRepository userRepository,
+                           PasswordEncoder passwordEncoder,
+                           JwtUtils jwtUtils,
+                           AuthenticationManager authenticationManager,
+                           SecurityUtils securityUtils) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtils = jwtUtils;
