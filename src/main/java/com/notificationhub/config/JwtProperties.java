@@ -1,4 +1,4 @@
-package com.notificationhub.security;
+package com.notificationhub.config;
 
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;

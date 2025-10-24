@@ -7,7 +7,7 @@ import com.notificationhub.entity.User;
 import com.notificationhub.enums.Role;
 import com.notificationhub.exception.InvalidCredentialsException;
 import com.notificationhub.repository.UserRepository;
-import com.notificationhub.security.JwtUtils;
+import com.notificationhub.util.JwtUtils;
 import com.notificationhub.util.SecurityUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;

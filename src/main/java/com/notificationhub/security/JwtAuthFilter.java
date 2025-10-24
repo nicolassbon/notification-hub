@@ -1,5 +1,6 @@
 package com.notificationhub.security;
 
+import com.notificationhub.util.JwtUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
