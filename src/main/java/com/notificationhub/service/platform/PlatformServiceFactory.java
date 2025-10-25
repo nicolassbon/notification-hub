@@ -14,7 +14,6 @@ public class PlatformServiceFactory {
     public PlatformServiceFactory(List<PlatformService> platformServices) {
         this.services = new HashMap<>();
 
-        // Registrar todos los servicios disponibles
         for (PlatformService service : platformServices) {
             services.put(service.getPlatformType(), service);
         }
@@ -43,6 +42,9 @@ public class PlatformServiceFactory {
 
     /**
      * Verifica si una plataforma está disponible y configurada
+     *
+     * @param platformType Tipo de plataforma
+     * @return true si está disponible, false en caso contrario
      */
     public boolean isPlatformAvailable(PlatformType platformType) {
         PlatformService service = services.get(platformType);

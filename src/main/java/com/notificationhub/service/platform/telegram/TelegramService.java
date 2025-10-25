@@ -22,7 +22,6 @@ public class TelegramService implements PlatformService {
     private final WebClient webClient;
     private final String botToken;
     private final String defaultChatId;
-    private final String TELEGRAM_API_URL = "https://api.telegram.org/bot";
 
     public TelegramService(
             WebClient.Builder webClientBuilder,
@@ -31,6 +30,7 @@ public class TelegramService implements PlatformService {
 
         this.botToken = botToken;
         this.defaultChatId = defaultChatId;
+        String TELEGRAM_API_URL = "https://api.telegram.org/bot";
         this.webClient = webClientBuilder
                 .baseUrl(TELEGRAM_API_URL + botToken)
                 .build();
@@ -48,15 +48,13 @@ public class TelegramService implements PlatformService {
                 .build();
 
         try {
-            // Preparar request body para Telegram
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("chat_id", chatId);
 
-            String signedContent = String.format("📨 *From: %s*\n\n%s", username, content);
+            String signedContent = String.format("*From: %s*\n\n%s", username, content);
             requestBody.put("text", signedContent);
             requestBody.put("parse_mode", "markdown");
 
-            // Llamar a Telegram API
             var response = webClient.post()
                     .uri("/sendMessage")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -69,7 +67,6 @@ public class TelegramService implements PlatformService {
                     })
                     .block();
 
-            // Verificar respuesta
             if (response != null && Boolean.TRUE.equals(response.get("ok"))) {
                 log.info("Message sent successfully to Telegram");
                 delivery.markAsSuccess(response);

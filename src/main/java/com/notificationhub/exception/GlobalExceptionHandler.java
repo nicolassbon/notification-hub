@@ -4,7 +4,9 @@ import com.notificationhub.dto.response.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
@@ -12,7 +14,6 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.client.HttpClientErrorException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -62,6 +63,22 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.UNAUTHORIZED.value())
                 .error("Unauthorized")
                 .message(ex.getMessage())
+                .timestamp(LocalDateTime.now())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
+
+    @ExceptionHandler({AccessDeniedException.class, InsufficientAuthenticationException.class})
+    public ResponseEntity<ErrorResponse> handleAccessDenied(
+            Exception ex,
+            HttpServletRequest request) {
+
+        ErrorResponse error = ErrorResponse.builder()
+                .status(HttpStatus.UNAUTHORIZED.value())
+                .error("Unauthorized")
+                .message("Authentication required : " + ex.getMessage())
                 .timestamp(LocalDateTime.now())
                 .path(request.getRequestURI())
                 .build();

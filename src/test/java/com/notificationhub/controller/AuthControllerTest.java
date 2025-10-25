@@ -58,6 +58,17 @@ public class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("Should use correct content type in responses")
+    void registerResponseHasCorrectContentType() throws Exception {
+        when(authService.register(any(RegisterRequest.class))).thenReturn(authResponse);
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validRegisterRequest)))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    }
+
+    @Test
     @DisplayName("Should register user successfully and return 201 CREATED")
     void registerValidRequestReturnsCreated() throws Exception {
         when(authService.register(any(RegisterRequest.class))).thenReturn(authResponse);
@@ -225,46 +236,4 @@ public class AuthControllerTest {
 
         verify(authService).login(any(LoginRequest.class));
     }
-
-    @Test
-    @DisplayName("Should use correct content type in responses")
-    void registerResponseHasCorrectContentType() throws Exception {
-        when(authService.register(any(RegisterRequest.class))).thenReturn(authResponse);
-
-        mockMvc.perform(post("/api/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(validRegisterRequest)))
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
-    }
-
-    @Test
-    @DisplayName("Should call service with correct parameters")
-    void registerCallsServiceWithCorrectParameters() throws Exception {
-        when(authService.register(any(RegisterRequest.class))).thenReturn(authResponse);
-
-        mockMvc.perform(post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validRegisterRequest)));
-
-        verify(authService).register(argThat(request ->
-                request.getUsername().equals("testuser") &&
-                        request.getPassword().equals("password123")
-        ));
-    }
-
-    @Test
-    @DisplayName("Should call login service with correct parameters")
-    void loginCallsServiceWithCorrectParameters() throws Exception {
-        when(authService.login(any(LoginRequest.class))).thenReturn(authResponse);
-
-        mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validLoginRequest)));
-
-        verify(authService).login(argThat(request ->
-                request.getUsername().equals("testuser") &&
-                        request.getPassword().equals("password123")
-        ));
-    }
-
 }

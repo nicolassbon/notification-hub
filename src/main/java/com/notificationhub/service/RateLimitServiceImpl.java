@@ -29,12 +29,10 @@ public class RateLimitServiceImpl implements RateLimitService {
     public void checkRateLimit(User user) {
         LocalDate today = LocalDate.now();
 
-        // Buscar o crear el contador de hoy
         DailyMessageCount count = dailyMessageCountRepository
                 .findByUserAndDate(user, today)
                 .orElseGet(() -> createNewCounter(user, today));
 
-        // Verificar si alcanzó el límite
         if (count.hasReachedLimit(user.getDailyMessageLimit())) {
             log.warn("User {} has reached daily limit. Count: {}, Limit: {}",
                     user.getUsername(), count.getCount(), user.getDailyMessageLimit());

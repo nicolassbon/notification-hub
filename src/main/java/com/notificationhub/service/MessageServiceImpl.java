@@ -46,28 +46,23 @@ public class MessageServiceImpl implements MessageService {
     public Message sendMessage(MessageRequest request) {
         log.info("Processing message request with {} destinations", request.getDestinations().size());
 
-        // User desde el SecurityContext (JWT)
         User currentUser = getAuthenticatedUser();
         log.info("User {} is sending a message", currentUser.getUsername());
 
-        // Lanza excepción si supera el límite diario
+        // Puede lanzar RateLimitExceededException
         rateLimitService.checkRateLimit(currentUser);
 
-        // Crear la entity Message
         Message message = Message.builder()
                 .user(currentUser)
                 .content(request.getContent())
                 .build();
         log.debug("Created message entity for user {}", currentUser.getUsername());
 
-        // Enviar a cada destino
         List<MessageDelivery> deliveries = processMessageDeliveries(request, message);
 
-        // Guardar el mensaje con todas las entregas
         Message savedMessage = messageRepository.save(message);
         log.info("Message saved with {} deliveries", deliveries.size());
 
-        // Incrementar el contador de rate limit SOLO si al menos una entrega fue exitosa
         // Si las dos son exitosas, cuenta como 1 solo mensaje
         updateRateLimitIfNeeded(currentUser, deliveries);
 
@@ -82,7 +77,6 @@ public class MessageServiceImpl implements MessageService {
      * @return Lista de todos los mensajes
      */
     public List<Message> getAllMessages() {
-        // Verificar que el usuario actual sea admin
         if (!securityUtils.isAdmin()) {
             throw new IllegalStateException("Only admins can view all messages");
         }
@@ -111,7 +105,6 @@ public class MessageServiceImpl implements MessageService {
 
         User currentUser = getAuthenticatedUser();
 
-        // Usar el record con builder
         MessageFilterCriteria criteria = MessageFilterCriteria.builder()
                 .status(status)
                 .platform(platform)

@@ -55,7 +55,6 @@ public class JwtUtils {
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
 
-        // Add roles to claims
         Collection<? extends GrantedAuthority> authorities = userDetails.getAuthorities();
         if (authorities != null && !authorities.isEmpty()) {
             claims.put("roles", authorities.stream()
@@ -81,7 +80,6 @@ public class JwtUtils {
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
-    // Additional method to validate token without UserDetails
     public Boolean validateToken(String token) {
         try {
             Jwts.parser()
@@ -94,7 +92,6 @@ public class JwtUtils {
         }
     }
 
-    // Extract roles from token
     @SuppressWarnings("unchecked")
     public List<String> extractRoles(String token) {
         Claims claims = extractAllClaims(token);

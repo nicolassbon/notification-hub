@@ -4,6 +4,7 @@ import com.notificationhub.security.CustomUserDetailsService;
 import com.notificationhub.security.JwtAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -41,6 +42,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/swagger-ui.html/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/error").permitAll()
+
+                        // Message endpoints
+                        .requestMatchers(HttpMethod.POST, "/api/messages/send").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/messages/my-messages").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/messages").hasRole("ADMIN")
 
                         // Protected endpoints - will use method security for finer control
                         .anyRequest().authenticated()

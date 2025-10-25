@@ -34,8 +34,7 @@ public class DiscordService implements PlatformService {
 
     @Override
     public MessageDelivery send(String content, String destination, String username) {
-        // Discord webhooks no usan destination, siempre van al canal configurado
-        // Pero guardamos la URL como destination para tracking
+        // Tracking, discord no usa
         String finalDestination = (destination != null && !destination.isEmpty()) ? destination : webhookUrl;
 
         log.info("Sending message to Discord webhook");
@@ -47,14 +46,12 @@ public class DiscordService implements PlatformService {
                 .build();
 
         try {
-            // Preparar request body para Discord
             Map<String, Object> requestBody = new HashMap<>();
 
-            String signedContent = String.format("📨 **From: %s**\n\n%s", username, content);
+            String signedContent = String.format("**From: %s**\n\n%s", username, content);
             requestBody.put("content", signedContent);
             requestBody.put("username", "Notification Hub Bot");
 
-            // Llamar a Discord Webhook
             webClient.post()
                     .uri(webhookUrl)
                     .contentType(MediaType.APPLICATION_JSON)
@@ -76,7 +73,6 @@ public class DiscordService implements PlatformService {
                     })
                     .block();
 
-            // Discord retorna 204 No Content en éxito
             Map<String, Object> responseData = new HashMap<>();
             responseData.put("status", "success");
             responseData.put("timestamp", LocalDateTime.now().toString());

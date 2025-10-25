@@ -46,12 +46,10 @@ public class AuthServiceImpl implements IAuthService {
     public AuthResponse register(RegisterRequest request) {
         log.info("Attempting to register user: {}", request.getUsername());
 
-        // 1. Verificar que el username no exista
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
             throw new IllegalArgumentException("Username already exists");
         }
 
-        // 2. Crear nuevo usuario
         User user = User.builder()
                 .username(request.getUsername())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
@@ -61,11 +59,9 @@ public class AuthServiceImpl implements IAuthService {
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        // 3. Guardar en BD
         User savedUser = userRepository.save(user);
         log.info("User registered successfully: {}", savedUser.getUsername());
 
-        // 4. Generar JWT
         UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
                 .username(savedUser.getUsername())
                 .password(savedUser.getPasswordHash())
@@ -74,7 +70,6 @@ public class AuthServiceImpl implements IAuthService {
 
         String token = jwtUtils.generateToken(userDetails);
 
-        // 5. Retornar respuesta
         return AuthResponse.builder()
                 .token(token)
                 .expiresIn(jwtUtils.getExpirationTime())
@@ -90,7 +85,6 @@ public class AuthServiceImpl implements IAuthService {
         log.info("Attempting login for user: {}", request.getUsername());
 
         try {
-            // 1. Autenticar
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             request.getUsername(),
@@ -98,14 +92,11 @@ public class AuthServiceImpl implements IAuthService {
                     )
             );
 
-            // 2. Obtener UserDetails
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
-            // 3. Buscar usuario en BD
             User user = userRepository.findByUsername(request.getUsername())
                     .orElseThrow(() -> new InvalidCredentialsException("Invalid credentials"));
 
-            // 4. Generar JWT
             String token = jwtUtils.generateToken(userDetails);
 
             log.info("Login successful for user: {}", user.getUsername());
