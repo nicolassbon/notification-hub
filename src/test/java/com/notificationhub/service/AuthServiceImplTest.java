@@ -201,7 +201,7 @@ public class AuthServiceImplTest {
                 () -> authService.getCurrentUser()
         );
 
-        assertEquals("No authenticated user found", exception.getMessage());
+        assertEquals("Invalid credentials", exception.getMessage());
         verify(securityUtils).getCurrentUser();
     }
 

@@ -27,3 +27,13 @@ jwt:
   secret: mySecretKeyForTestingPurposesOnly
   expiration: 86400000
 
+discord:
+  webhook:
+    url: https://discord.com/api/webhooks/test-webhook-url
+
+telegram:
+  bot:
+    token: test-telegram-bot-token
+  default-chat-id: 123456789
+
+

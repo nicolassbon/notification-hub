@@ -130,7 +130,7 @@ public class AuthServiceImpl implements IAuthService {
     public User getCurrentUser() {
         User currentUser = securityUtils.getCurrentUser();
         if (currentUser == null) {
-            throw new InvalidCredentialsException("No authenticated user found");
+            throw new InvalidCredentialsException("Invalid credentials");
         }
         return currentUser;
     }

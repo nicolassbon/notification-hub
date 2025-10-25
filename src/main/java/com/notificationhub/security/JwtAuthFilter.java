@@ -5,10 +5,10 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -35,7 +35,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             // Extraer el token JWT de la solicitud
             String jwt = parseJwt(request);
 
-            // Si hay un token válido, autenticar al usuario
             if (jwt != null && jwtUtils.validateToken(jwt)) {
                 // Carga el usuario asociado al token
                 String username = jwtUtils.extractUsername(jwt);
@@ -53,10 +52,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 // Establecer la autenticación en el contexto de seguridad
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
-        } catch (UsernameNotFoundException e) {
-            logger.error("User not found: {}", e);
         } catch (Exception e) {
-            logger.error("Cannot set user authentication: {}", e);
+            SecurityContextHolder.clearContext();
         }
 
         // Continuar con la petición

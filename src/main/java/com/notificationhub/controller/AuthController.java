@@ -3,6 +3,9 @@ package com.notificationhub.controller;
 import com.notificationhub.dto.request.LoginRequest;
 import com.notificationhub.dto.request.RegisterRequest;
 import com.notificationhub.dto.response.AuthResponse;
+import com.notificationhub.dto.response.UserResponse;
+import com.notificationhub.entity.User;
+import com.notificationhub.mapper.UserMapper;
 import com.notificationhub.service.IAuthService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -15,9 +18,11 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class AuthController {
     private final IAuthService authService;
+    private final UserMapper userMapper;
 
-    public AuthController(IAuthService authService) {
+    public AuthController(IAuthService authService, UserMapper userMapper) {
         this.authService = authService;
+        this.userMapper = userMapper;
     }
 
     @PostMapping("/register")
@@ -38,6 +43,13 @@ public class AuthController {
         AuthResponse response = authService.login(request);
 
         log.info("Login successful for user: {}", response.getUsername());
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserResponse> getCurrentUser() {
+        User user = authService.getCurrentUser();
+        UserResponse response = userMapper.toResponse(user);
         return ResponseEntity.ok(response);
     }
 }

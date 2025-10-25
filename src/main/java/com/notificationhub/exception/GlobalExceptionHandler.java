@@ -8,6 +8,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -53,7 +54,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler({InvalidCredentialsException.class, BadCredentialsException.class})
-    public ResponseEntity<ErrorResponse> handleInvalidCredentials(
+    public ResponseEntity<ErrorResponse> handleUnauthorizedExceptions(
             Exception ex,
             HttpServletRequest request) {
 
@@ -148,6 +149,22 @@ public class GlobalExceptionHandler {
                         .error("Unsupported Media Type")
                         .message("Content type not supported: " + ex.getContentType())
                         .build());
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMethodNotSupported(
+            HttpRequestMethodNotSupportedException ex,
+            HttpServletRequest request) {
+
+        ErrorResponse error = ErrorResponse.builder()
+                .status(HttpStatus.METHOD_NOT_ALLOWED.value())
+                .error("Method Not Allowed")
+                .message("Method '" + ex.getMethod() + "' not supported for this endpoint")
+                .timestamp(LocalDateTime.now())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(error);
     }
 
     @ExceptionHandler(Exception.class)
