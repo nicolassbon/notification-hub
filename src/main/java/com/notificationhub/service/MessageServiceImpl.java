@@ -188,7 +188,7 @@ public class MessageServiceImpl implements MessageService {
 
     private List<Message> retrieveUserMessages(User user, MessageFilterCriteria criteria) {
         if (criteria.hasDateFilters()) {
-            return messageRepository.findByUserAndDateRange(user, criteria.from(), criteria.to());.
+            return messageRepository.findByUserAndDateRange(user, criteria.from(), criteria.to());
         } else {
             return messageRepository.findMessagesByUser(user);
         }

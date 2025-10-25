@@ -16,17 +16,6 @@ CREATE TABLE users (
     INDEX idx_username (username),
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE platform_configurations (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    platform_type ENUM('TELEGRAM', 'DISCORD') UNIQUE NOT NULL,
-    configuration JSON NOT NULL COMMENT 'Configuración específica de cada plataforma (tokens, webhooks, etc.)',
-    is_active BOOLEAN DEFAULT TRUE NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
-    INDEX idx_platform_active (platform_type, is_active)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 CREATE TABLE messages (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,
@@ -74,12 +63,3 @@ CREATE TABLE daily_message_counts (
 
 INSERT INTO users (username, password_hash, role, daily_message_limit) 
 VALUES ('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'ADMIN', 1000);
-
-INSERT INTO platform_configurations (platform_type, configuration, is_active) VALUES
-('TELEGRAM', JSON_OBJECT(
-    'botToken', 'YOUR_TELEGRAM_BOT_TOKEN',
-    'defaultChatId', 'YOUR_DEFAULT_CHAT_ID'
-), TRUE),
-('DISCORD', JSON_OBJECT(
-    'webhookUrl', 'YOUR_DISCORD_WEBHOOK_URL'
-), TRUE);
