@@ -45,17 +45,6 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
-
-    public boolean isDeleted() {
-        return this.deletedAt != null;
-    }
-
-    public void softDelete() {
-        this.deletedAt = LocalDateTime.now();
-    }
-
     @Override
     public final boolean equals(Object o) {
         if (this == o) return true;

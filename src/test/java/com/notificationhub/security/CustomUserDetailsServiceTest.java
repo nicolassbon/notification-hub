@@ -42,7 +42,6 @@ public class CustomUserDetailsServiceTest {
                 .dailyMessageLimit(100)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
-                .deletedAt(null)
                 .build();
 
         adminUser = User.builder()
@@ -53,7 +52,6 @@ public class CustomUserDetailsServiceTest {
                 .dailyMessageLimit(1000)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
-                .deletedAt(null)
                 .build();
 
         deletedUser = User.builder()
@@ -64,7 +62,6 @@ public class CustomUserDetailsServiceTest {
                 .dailyMessageLimit(50)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
-                .deletedAt(LocalDateTime.now())
                 .build();
     }
 

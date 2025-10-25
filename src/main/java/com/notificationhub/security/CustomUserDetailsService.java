@@ -28,12 +28,11 @@ public class CustomUserDetailsService implements UserDetailsService {
     private UserDetails buildUserFromUser(User user) {
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getUsername())
-                .password(user.getPasswordHash()) // Using password_hash from DB
+                .password(user.getPasswordHash())
                 .authorities(getAuthorities(user))
                 .accountExpired(false)
                 .accountLocked(false)
                 .credentialsExpired(false)
-                .disabled(user.getDeletedAt() != null) // User is enabled if not deleted
                 .build();
     }
 

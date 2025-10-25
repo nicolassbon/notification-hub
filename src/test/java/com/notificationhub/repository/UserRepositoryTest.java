@@ -27,8 +27,6 @@ public class UserRepositoryTest {
     private UserRepository userRepository;
 
     private User activeUser;
-    private User adminUser;
-    private User deletedUser;
 
     @BeforeEach
     void setUp() {
@@ -41,32 +39,19 @@ public class UserRepositoryTest {
                 .dailyMessageLimit(100)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
-                .deletedAt(null)
                 .build();
 
-        adminUser = User.builder()
+        User adminUser = User.builder()
                 .username("admin")
                 .passwordHash("$2a$10$hashedadminpassword")
                 .role(Role.ADMIN)
                 .dailyMessageLimit(1000)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
-                .deletedAt(null)
-                .build();
-
-        deletedUser = User.builder()
-                .username("deleteduser")
-                .passwordHash("$2a$10$hasheddeletedpassword")
-                .role(Role.USER)
-                .dailyMessageLimit(50)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .deletedAt(LocalDateTime.now())
                 .build();
 
         entityManager.persist(activeUser);
         entityManager.persist(adminUser);
-        entityManager.persist(deletedUser);
         entityManager.flush();
     }
 
@@ -78,7 +63,6 @@ public class UserRepositoryTest {
         assertTrue(foundUser.isPresent());
         assertEquals("testuser", foundUser.get().getUsername());
         assertEquals(Role.USER, foundUser.get().getRole());
-        assertNull(foundUser.get().getDeletedAt());
     }
 
     @Test
@@ -122,41 +106,31 @@ public class UserRepositoryTest {
     }
 
     @Test
-    @DisplayName("Should find all active users excluding deleted ones")
+    @DisplayName("Should find all users")
     void findAllActiveReturnsOnlyActiveUsers() {
-        List<User> activeUsers = userRepository.findAllActive();
+        List<User> activeUsers = userRepository.findAll();
 
         assertNotNull(activeUsers);
-        assertEquals(2, activeUsers.size()); // activeUser and adminUser
-        assertTrue(activeUsers.stream().allMatch(user -> user.getDeletedAt() == null));
+        assertEquals(2, activeUsers.size());
         assertTrue(activeUsers.stream().anyMatch(user -> user.getUsername().equals("testuser")));
         assertTrue(activeUsers.stream().anyMatch(user -> user.getUsername().equals("admin")));
         assertFalse(activeUsers.stream().anyMatch(user -> user.getUsername().equals("deleteduser")));
     }
 
     @Test
-    @DisplayName("Should find user by ID when user exists and is active")
+    @DisplayName("Should find user by ID when user exists")
     void findByIdAndActiveWhenUserExistsAndActiveReturnsUser() {
-        Optional<User> foundUser = userRepository.findByIdAndActive(activeUser.getId());
+        Optional<User> foundUser = userRepository.findById(activeUser.getId());
 
         assertTrue(foundUser.isPresent());
         assertEquals(activeUser.getId(), foundUser.get().getId());
         assertEquals("testuser", foundUser.get().getUsername());
-        assertNull(foundUser.get().getDeletedAt());
-    }
-
-    @Test
-    @DisplayName("Should not find user by ID when user is deleted")
-    void findByIdAndActiveWhenUserIsDeletedReturnsEmpty() {
-        Optional<User> foundUser = userRepository.findByIdAndActive(deletedUser.getId());
-
-        assertFalse(foundUser.isPresent());
     }
 
     @Test
     @DisplayName("Should not find user by ID when user does not exist")
     void findByIdAndActiveWhenUserDoesNotExistReturnsEmpty() {
-        Optional<User> foundUser = userRepository.findByIdAndActive(999L);
+        Optional<User> foundUser = userRepository.findById(999L);
 
         assertFalse(foundUser.isPresent());
     }
@@ -171,7 +145,6 @@ public class UserRepositoryTest {
                 .dailyMessageLimit(100)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
-                .deletedAt(null)
                 .build();
 
         User savedUser = userRepository.save(newUser);
@@ -197,23 +170,6 @@ public class UserRepositoryTest {
         Optional<User> foundUser = userRepository.findByUsername("testuser");
         assertTrue(foundUser.isPresent());
         assertEquals(200, foundUser.get().getDailyMessageLimit());
-    }
-
-    @Test
-    @DisplayName("Should soft delete user successfully")
-    void deleteUserSetsDeletedAt() {
-        activeUser.setDeletedAt(LocalDateTime.now());
-        userRepository.save(activeUser);
-        entityManager.flush();
-        entityManager.clear();
-
-        Optional<User> foundUser = userRepository.findByUsername("testuser");
-        assertFalse(foundUser.isPresent());
-
-        // Check soft delete worked and still exists in DB
-        User deletedUserInDb = entityManager.find(User.class, activeUser.getId());
-        assertNotNull(deletedUserInDb);
-        assertNotNull(deletedUserInDb.getDeletedAt());
     }
 
     @Test
