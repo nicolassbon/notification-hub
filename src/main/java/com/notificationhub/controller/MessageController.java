@@ -45,21 +45,6 @@ public class MessageController {
     }
 
     /**
-     * Obtiene todos los mensajes (Solo ADMIN)
-     */
-    @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<MessageResponse>> getAllMessages() {
-        log.info("Admin requesting all messages");
-
-        List<Message> messages = messageService.getAllMessages();
-        List<MessageResponse> responses = messageMapper.toResponseList(messages);
-
-        log.info("Returning {} messages to admin", responses.size());
-        return ResponseEntity.ok(responses);
-    }
-
-    /**
      * Obtiene los mensajes del usuario actual con filtros opcionales
      */
     @GetMapping("/my-messages")
