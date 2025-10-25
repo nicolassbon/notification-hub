@@ -31,10 +31,11 @@ import java.util.Map;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("MessageController Unit Tests - Send Endpoint")
+@DisplayName("MessageController Unit Tests")
 class MessageControllerTest {
 
     private MockMvc mockMvc;
@@ -306,5 +307,162 @@ class MessageControllerTest {
 
         verify(messageService, never()).sendMessage(any());
         verify(messageMapper, never()).toResponse(any());
+    }
+
+    @Test
+    @DisplayName("Should return user messages without filters")
+    void getMyMessagesWithoutFiltersReturnsOk() throws Exception {
+        List<Message> userMessages = List.of(successMessage);
+        List<MessageResponse> userResponses = List.of(successResponse);
+
+        when(messageService.getUserMessagesWithFilters(isNull(), isNull(), isNull(), isNull()))
+                .thenReturn(userMessages);
+        when(messageMapper.toResponseList(userMessages)).thenReturn(userResponses);
+
+        mockMvc.perform(get("/api/messages/my-messages"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(1L))
+                .andExpect(jsonPath("$[0].username").value("testuser"));
+
+        verify(messageService).getUserMessagesWithFilters(isNull(), isNull(), isNull(), isNull());
+        verify(messageMapper).toResponseList(userMessages);
+    }
+
+    @Test
+    @DisplayName("Should return user messages with status filter")
+    void getMyMessagesWithStatusFilterReturnsOk() throws Exception {
+        List<Message> userMessages = List.of(successMessage);
+        List<MessageResponse> userResponses = List.of(successResponse);
+
+        when(messageService.getUserMessagesWithFilters(eq(DeliveryStatus.SUCCESS), isNull(), isNull(), isNull()))
+                .thenReturn(userMessages);
+        when(messageMapper.toResponseList(userMessages)).thenReturn(userResponses);
+
+        // Act & Assert
+        mockMvc.perform(get("/api/messages/my-messages")
+                        .param("status", "SUCCESS"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1));
+
+        verify(messageService).getUserMessagesWithFilters(eq(DeliveryStatus.SUCCESS), isNull(), isNull(), isNull());
+        verify(messageMapper).toResponseList(userMessages);
+    }
+
+    @Test
+    @DisplayName("Should return user messages with platform filter")
+    void getMyMessagesWithPlatformFilterReturnsOk() throws Exception {
+        // Arrange
+        List<Message> userMessages = List.of(successMessage);
+        List<MessageResponse> userResponses = List.of(successResponse);
+
+        when(messageService.getUserMessagesWithFilters(isNull(), eq(PlatformType.DISCORD), isNull(), isNull()))
+                .thenReturn(userMessages);
+        when(messageMapper.toResponseList(userMessages)).thenReturn(userResponses);
+
+        // Act & Assert
+        mockMvc.perform(get("/api/messages/my-messages")
+                        .param("platform", "DISCORD"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1));
+
+        verify(messageService).getUserMessagesWithFilters(isNull(), eq(PlatformType.DISCORD), isNull(), isNull());
+        verify(messageMapper).toResponseList(userMessages);
+    }
+
+    @Test
+    @DisplayName("Should return user messages with date range filter")
+    void getMyMessagesWithDateRangeReturnsOk() throws Exception {
+        List<Message> userMessages = List.of(successMessage);
+        List<MessageResponse> userResponses = List.of(successResponse);
+
+        LocalDateTime from = LocalDateTime.now().minusDays(1);
+        LocalDateTime to = LocalDateTime.now();
+
+        when(messageService.getUserMessagesWithFilters(isNull(), isNull(), eq(from), eq(to)))
+                .thenReturn(userMessages);
+        when(messageMapper.toResponseList(userMessages)).thenReturn(userResponses);
+
+        mockMvc.perform(get("/api/messages/my-messages")
+                        .param("from", from.toString())
+                        .param("to", to.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1));
+
+        verify(messageService).getUserMessagesWithFilters(isNull(), isNull(), eq(from), eq(to));
+        verify(messageMapper).toResponseList(userMessages);
+    }
+
+    @Test
+    @DisplayName("Should return user messages with all filters")
+    void getMyMessagesWithAllFiltersReturnsOk() throws Exception {
+        List<Message> userMessages = List.of(successMessage);
+        List<MessageResponse> userResponses = List.of(successResponse);
+
+        LocalDateTime from = LocalDateTime.now().minusDays(1);
+        LocalDateTime to = LocalDateTime.now();
+
+        when(messageService.getUserMessagesWithFilters(
+                eq(DeliveryStatus.SUCCESS),
+                eq(PlatformType.TELEGRAM),
+                eq(from),
+                eq(to)))
+                .thenReturn(userMessages);
+        when(messageMapper.toResponseList(userMessages)).thenReturn(userResponses);
+
+        mockMvc.perform(get("/api/messages/my-messages")
+                        .param("status", "SUCCESS")
+                        .param("platform", "TELEGRAM")
+                        .param("from", from.toString())
+                        .param("to", to.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1));
+
+        verify(messageService).getUserMessagesWithFilters(
+                eq(DeliveryStatus.SUCCESS),
+                eq(PlatformType.TELEGRAM),
+                eq(from),
+                eq(to));
+        verify(messageMapper).toResponseList(userMessages);
+    }
+
+    @Test
+    @DisplayName("Should handle invalid date format")
+    void getMyMessagesInvalidDateFormatReturnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/messages/my-messages")
+                        .param("from", "invalid-date")
+                        .param("to", "invalid-date"))
+                .andExpect(status().isBadRequest());
+
+        verify(messageService, never()).getUserMessagesWithFilters(any(), any(), any(), any());
+        verify(messageMapper, never()).toResponseList(any());
+    }
+
+    @Test
+    @DisplayName("Should handle service exception in getMyMessages")
+    void getMyMessagesServiceThrowsExceptionReturnsError() throws Exception {
+        when(messageService.getUserMessagesWithFilters(isNull(), isNull(), isNull(), isNull()))
+                .thenThrow(new RuntimeException("Service error"));
+
+        mockMvc.perform(get("/api/messages/my-messages"))
+                .andExpect(status().is5xxServerError());
+
+        verify(messageService).getUserMessagesWithFilters(isNull(), isNull(), isNull(), isNull());
+        verify(messageMapper, never()).toResponseList(any());
+    }
+
+    @Test
+    @DisplayName("Should return empty list when no messages found")
+    void getMyMessagesNoMessagesReturnsEmptyList() throws Exception {
+        when(messageService.getUserMessagesWithFilters(isNull(), isNull(), isNull(), isNull()))
+                .thenReturn(List.of());
+        when(messageMapper.toResponseList(List.of())).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/messages/my-messages"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+
+        verify(messageService).getUserMessagesWithFilters(isNull(), isNull(), isNull(), isNull());
+        verify(messageMapper).toResponseList(List.of());
     }
 }
