@@ -38,6 +38,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DisplayName("MessageController Unit Tests")
 class MessageControllerTest {
 
+    private final String API_MESSAGES_GET = "/api/messages";
+    private final String API_MESSAGES_SEND = "/api/messages/send";
     private MockMvc mockMvc;
 
     @Mock
@@ -143,7 +145,7 @@ class MessageControllerTest {
         when(messageService.sendMessage(any(MessageRequest.class))).thenReturn(successMessage);
         when(messageMapper.toResponse(successMessage)).thenReturn(successResponse);
 
-        mockMvc.perform(post("/api/messages/send")
+        mockMvc.perform(post(API_MESSAGES_SEND)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validMessageRequest)))
                 .andExpect(status().isCreated())
@@ -168,7 +170,7 @@ class MessageControllerTest {
         when(messageService.sendMessage(any(MessageRequest.class))).thenReturn(successMessage);
         when(messageMapper.toResponse(successMessage)).thenReturn(successResponse);
 
-        mockMvc.perform(post("/api/messages/send")
+        mockMvc.perform(post(API_MESSAGES_SEND)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validMessageRequest)))
                 .andExpect(status().isCreated())
@@ -186,7 +188,7 @@ class MessageControllerTest {
     void sendMessageEmptyContentReturnsBadRequest() throws Exception {
         MessageRequest invalidRequest = new MessageRequest("", validMessageRequest.getDestinations());
 
-        mockMvc.perform(post("/api/messages/send")
+        mockMvc.perform(post(API_MESSAGES_SEND)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
@@ -200,7 +202,7 @@ class MessageControllerTest {
     void sendMessageNullContentReturnsBadRequest() throws Exception {
         MessageRequest invalidRequest = new MessageRequest(null, validMessageRequest.getDestinations());
 
-        mockMvc.perform(post("/api/messages/send")
+        mockMvc.perform(post(API_MESSAGES_SEND)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
@@ -214,7 +216,7 @@ class MessageControllerTest {
     void sendMessageEmptyDestinationsReturnsBadRequest() throws Exception {
         MessageRequest invalidRequest = new MessageRequest("Test message", List.of());
 
-        mockMvc.perform(post("/api/messages/send")
+        mockMvc.perform(post(API_MESSAGES_SEND)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
@@ -229,7 +231,7 @@ class MessageControllerTest {
     void sendMessageNullDestinationsReturnsBadRequest() throws Exception {
         MessageRequest invalidRequest = new MessageRequest("Test message", null);
 
-        mockMvc.perform(post("/api/messages/send")
+        mockMvc.perform(post(API_MESSAGES_SEND)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
@@ -246,7 +248,7 @@ class MessageControllerTest {
                 List.of(new DestinationRequest(null, "some-destination"))
         );
 
-        mockMvc.perform(post("/api/messages/send")
+        mockMvc.perform(post(API_MESSAGES_SEND)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
@@ -261,7 +263,7 @@ class MessageControllerTest {
         String longContent = "A".repeat(4001);
         MessageRequest invalidRequest = new MessageRequest(longContent, validMessageRequest.getDestinations());
 
-        mockMvc.perform(post("/api/messages/send")
+        mockMvc.perform(post(API_MESSAGES_SEND)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
@@ -273,7 +275,7 @@ class MessageControllerTest {
     @Test
     @DisplayName("Should handle invalid JSON gracefully")
     void sendMessageInvalidJsonReturnsBadRequest() throws Exception {
-        mockMvc.perform(post("/api/messages/send")
+        mockMvc.perform(post(API_MESSAGES_SEND)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ \"invalid\": \"json\" }"))
                 .andExpect(status().isBadRequest());
@@ -288,7 +290,7 @@ class MessageControllerTest {
         when(messageService.sendMessage(any(MessageRequest.class)))
                 .thenThrow(new RuntimeException("Service error"));
 
-        mockMvc.perform(post("/api/messages/send")
+        mockMvc.perform(post(API_MESSAGES_SEND)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validMessageRequest)))
                 .andExpect(status().is5xxServerError());
@@ -300,7 +302,7 @@ class MessageControllerTest {
     @Test
     @DisplayName("Should return 415 for unsupported media type")
     void sendMessageUnsupportedMediaTypeReturnsUnsupportedMediaType() throws Exception {
-        mockMvc.perform(post("/api/messages/send")
+        mockMvc.perform(post(API_MESSAGES_SEND)
                         .contentType(MediaType.TEXT_PLAIN)
                         .content("plain text"))
                 .andExpect(status().isUnsupportedMediaType());
@@ -319,7 +321,7 @@ class MessageControllerTest {
                 .thenReturn(userMessages);
         when(messageMapper.toResponseList(userMessages)).thenReturn(userResponses);
 
-        mockMvc.perform(get("/api/messages/my-messages"))
+        mockMvc.perform(get(API_MESSAGES_GET))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].id").value(1L))
@@ -340,7 +342,7 @@ class MessageControllerTest {
         when(messageMapper.toResponseList(userMessages)).thenReturn(userResponses);
 
         // Act & Assert
-        mockMvc.perform(get("/api/messages/my-messages")
+        mockMvc.perform(get(API_MESSAGES_GET)
                         .param("status", "SUCCESS"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1));
@@ -361,7 +363,7 @@ class MessageControllerTest {
         when(messageMapper.toResponseList(userMessages)).thenReturn(userResponses);
 
         // Act & Assert
-        mockMvc.perform(get("/api/messages/my-messages")
+        mockMvc.perform(get(API_MESSAGES_GET)
                         .param("platform", "DISCORD"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1));
@@ -383,7 +385,7 @@ class MessageControllerTest {
                 .thenReturn(userMessages);
         when(messageMapper.toResponseList(userMessages)).thenReturn(userResponses);
 
-        mockMvc.perform(get("/api/messages/my-messages")
+        mockMvc.perform(get(API_MESSAGES_GET)
                         .param("from", from.toString())
                         .param("to", to.toString()))
                 .andExpect(status().isOk())
@@ -410,7 +412,7 @@ class MessageControllerTest {
                 .thenReturn(userMessages);
         when(messageMapper.toResponseList(userMessages)).thenReturn(userResponses);
 
-        mockMvc.perform(get("/api/messages/my-messages")
+        mockMvc.perform(get(API_MESSAGES_GET)
                         .param("status", "SUCCESS")
                         .param("platform", "TELEGRAM")
                         .param("from", from.toString())
@@ -429,7 +431,7 @@ class MessageControllerTest {
     @Test
     @DisplayName("Should handle invalid date format")
     void getMyMessagesInvalidDateFormatReturnsBadRequest() throws Exception {
-        mockMvc.perform(get("/api/messages/my-messages")
+        mockMvc.perform(get(API_MESSAGES_GET)
                         .param("from", "invalid-date")
                         .param("to", "invalid-date"))
                 .andExpect(status().isBadRequest());
@@ -444,7 +446,7 @@ class MessageControllerTest {
         when(messageService.getUserMessagesWithFilters(isNull(), isNull(), isNull(), isNull()))
                 .thenThrow(new RuntimeException("Service error"));
 
-        mockMvc.perform(get("/api/messages/my-messages"))
+        mockMvc.perform(get(API_MESSAGES_GET))
                 .andExpect(status().is5xxServerError());
 
         verify(messageService).getUserMessagesWithFilters(isNull(), isNull(), isNull(), isNull());
@@ -458,7 +460,7 @@ class MessageControllerTest {
                 .thenReturn(List.of());
         when(messageMapper.toResponseList(List.of())).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/messages/my-messages"))
+        mockMvc.perform(get(API_MESSAGES_GET))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
 

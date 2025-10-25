@@ -35,21 +35,10 @@ public class Message {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
-
     @OneToMany(mappedBy = "message", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     @ToString.Exclude
     private List<MessageDelivery> deliveries = new ArrayList<>();
-
-    public boolean isDeleted() {
-        return this.deletedAt != null;
-    }
-
-    public void softDelete() {
-        this.deletedAt = LocalDateTime.now();
-    }
 
     public void addDelivery(MessageDelivery delivery) {
         deliveries.add(delivery);

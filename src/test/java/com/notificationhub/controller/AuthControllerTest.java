@@ -25,6 +25,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AuthController Unit Tests")
 public class AuthControllerTest {
+
+    private final String API_REGISTER = "/api/auth/register";
+    private final String API_LOGIN = "/api/auth/login";
+
     private MockMvc mockMvc;
 
     @Mock
@@ -62,7 +66,7 @@ public class AuthControllerTest {
     void registerResponseHasCorrectContentType() throws Exception {
         when(authService.register(any(RegisterRequest.class))).thenReturn(authResponse);
 
-        mockMvc.perform(post("/api/auth/register")
+        mockMvc.perform(post(API_REGISTER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRegisterRequest)))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
@@ -73,7 +77,7 @@ public class AuthControllerTest {
     void registerValidRequestReturnsCreated() throws Exception {
         when(authService.register(any(RegisterRequest.class))).thenReturn(authResponse);
 
-        mockMvc.perform(post("/api/auth/register")
+        mockMvc.perform(post(API_REGISTER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRegisterRequest)))
                 .andExpect(status().isCreated())
@@ -91,7 +95,7 @@ public class AuthControllerTest {
     void loginValidRequestReturnsOk() throws Exception {
         when(authService.login(any(LoginRequest.class))).thenReturn(authResponse);
 
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post(API_LOGIN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validLoginRequest)))
                 .andExpect(status().isOk())
@@ -109,7 +113,7 @@ public class AuthControllerTest {
     void registerEmptyUsernameReturnsBadRequest() throws Exception {
         RegisterRequest invalidRequest = new RegisterRequest("", "password123");
 
-        mockMvc.perform(post("/api/auth/register")
+        mockMvc.perform(post(API_REGISTER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
@@ -122,7 +126,7 @@ public class AuthControllerTest {
     void registerNullUsernameReturnsBadRequest() throws Exception {
         RegisterRequest invalidRequest = new RegisterRequest(null, "password123");
 
-        mockMvc.perform(post("/api/auth/register")
+        mockMvc.perform(post(API_REGISTER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
@@ -135,7 +139,7 @@ public class AuthControllerTest {
     void registerShortPasswordReturnsBadRequest() throws Exception {
         RegisterRequest invalidRequest = new RegisterRequest("testuser", "123");
 
-        mockMvc.perform(post("/api/auth/register")
+        mockMvc.perform(post(API_REGISTER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
@@ -148,7 +152,7 @@ public class AuthControllerTest {
     void loginEmptyUsernameReturnsBadRequest() throws Exception {
         LoginRequest invalidRequest = new LoginRequest("", "password123");
 
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post(API_LOGIN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
@@ -161,7 +165,7 @@ public class AuthControllerTest {
     void loginNullPasswordReturnsBadRequest() throws Exception {
         LoginRequest invalidRequest = new LoginRequest("testuser", null);
 
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post(API_LOGIN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
@@ -172,7 +176,7 @@ public class AuthControllerTest {
     @Test
     @DisplayName("Should return 400 for invalid JSON in register request")
     void registerInvalidJsonReturnsBadRequest() throws Exception {
-        mockMvc.perform(post("/api/auth/register")
+        mockMvc.perform(post(API_REGISTER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ \"username\": \"test\" }"))
                 .andExpect(status().isBadRequest());
@@ -183,7 +187,7 @@ public class AuthControllerTest {
     @Test
     @DisplayName("Should return 400 for invalid JSON in login request")
     void loginInvalidJsonReturnsBadRequest() throws Exception {
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post(API_LOGIN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ \"username\": \"test\" }"))
                 .andExpect(status().isBadRequest());
@@ -194,7 +198,7 @@ public class AuthControllerTest {
     @Test
     @DisplayName("Should return 415 for unsupported media type")
     void registerUnsupportedMediaTypeReturnsUnsupportedMediaType() throws Exception {
-        mockMvc.perform(post("/api/auth/register")
+        mockMvc.perform(post(API_REGISTER)
                         .contentType(MediaType.TEXT_PLAIN)
                         .content("plain text"))
                 .andExpect(status().isUnsupportedMediaType());
@@ -208,7 +212,7 @@ public class AuthControllerTest {
         when(authService.register(any(RegisterRequest.class)))
                 .thenThrow(new IllegalArgumentException("Username already exists"));
 
-        mockMvc.perform(post("/api/auth/register")
+        mockMvc.perform(post(API_REGISTER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRegisterRequest)))
                 .andExpect(status().isBadRequest()) // IllegalArgumentException → 400
@@ -226,7 +230,7 @@ public class AuthControllerTest {
         when(authService.login(any(LoginRequest.class)))
                 .thenThrow(new RuntimeException("Invalid credentials"));
 
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post(API_LOGIN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validLoginRequest)))
                 .andExpect(status().isInternalServerError()) // RuntimeException → 500

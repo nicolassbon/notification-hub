@@ -81,7 +81,7 @@ public class MessageServiceImpl implements MessageService {
             throw new IllegalStateException("Only admins can view all messages");
         }
 
-        List<Message> messages = messageRepository.findAllActive();
+        List<Message> messages = messageRepository.findAll();
 
         log.info("Admin retrieved {} messages", messages.size());
 
@@ -188,9 +188,9 @@ public class MessageServiceImpl implements MessageService {
 
     private List<Message> retrieveUserMessages(User user, MessageFilterCriteria criteria) {
         if (criteria.hasDateFilters()) {
-            return messageRepository.findByUserAndDateRange(user, criteria.from(), criteria.to());
+            return messageRepository.findByUserAndDateRange(user, criteria.from(), criteria.to());.
         } else {
-            return messageRepository.findByUserAndActive(user);
+            return messageRepository.findMessagesByUser(user);
         }
     }
 

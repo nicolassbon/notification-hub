@@ -14,9 +14,4 @@ public interface DailyMessageCountRepository extends JpaRepository<DailyMessageC
      * Busca el contador de un usuario para una fecha específica
      */
     Optional<DailyMessageCount> findByUserAndDate(User user, LocalDate date);
-
-    /**
-     * Verifica si existe un contador para un usuario y fecha
-     */
-    boolean existsByUserAndDate(User user, LocalDate date);
 }
