@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -31,35 +32,37 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         try {
-            // Extraer el token JWT de la solicitud
             String jwt = parseJwt(request);
 
-            if (jwt != null && jwtUtils.validateToken(jwt)) {
-                // Carga el usuario asociado al token
-                String username = jwtUtils.extractUsername(jwt);
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            if (jwt != null) {
+                // Validar token
+                if (!jwtUtils.validateToken(jwt)) {
+                    // Marcar como token inválido y dejar que el entry point lo maneje
+                    request.setAttribute("auth.error", "INVALID_TOKEN");
+                } else {
+                    // Token válido - autenticar
+                    String username = jwtUtils.extractUsername(jwt);
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-                // Crear el token de autenticación con roles
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities()
-                        );
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails, null, userDetails.getAuthorities());
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                // Establecer la autenticación en el contexto de seguridad
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
             }
+        } catch (UsernameNotFoundException e) {
+            // Usuario no encontrado - 401
+            request.setAttribute("auth.error", "USER_NOT_FOUND");
         } catch (Exception e) {
-            SecurityContextHolder.clearContext();
+            // Otro error de autenticación - 401
+            request.setAttribute("auth.error", "AUTH_FAILED");
         }
 
-        // Continuar con la petición
         filterChain.doFilter(request, response);
     }
 
-    // Extraer el token JWT del encabezado Authorization
     private String parseJwt(HttpServletRequest request) {
         String headerAuth = request.getHeader("Authorization");
 

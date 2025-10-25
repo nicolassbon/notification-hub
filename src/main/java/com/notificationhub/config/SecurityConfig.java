@@ -1,7 +1,9 @@
 package com.notificationhub.config;
 
 import com.notificationhub.security.CustomUserDetailsService;
+import com.notificationhub.security.JwtAccessDeniedHandler;
 import com.notificationhub.security.JwtAuthFilter;
+import com.notificationhub.security.JwtAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -26,10 +28,19 @@ public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
     private final JwtAuthFilter jwtAuthFilter;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
 
-    public SecurityConfig(CustomUserDetailsService userDetailsService, JwtAuthFilter jwtAuthFilter) {
+    public SecurityConfig(
+            CustomUserDetailsService userDetailsService,
+            JwtAuthFilter jwtAuthFilter,
+            JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
+            JwtAccessDeniedHandler jwtAccessDeniedHandler) {
+
         this.userDetailsService = userDetailsService;
         this.jwtAuthFilter = jwtAuthFilter;
+        this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
+        this.jwtAccessDeniedHandler = jwtAccessDeniedHandler;
     }
 
     @Bean
@@ -37,22 +48,31 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                // ✅ Configurar los handlers personalizados
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)  // 401
+                        .accessDeniedHandler(jwtAccessDeniedHandler)            // 403
+                )
+
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/swagger-ui.html/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/error").permitAll()
 
-                        // Message endpoints
-                        .requestMatchers(HttpMethod.POST, "/api/messages/send").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/messages/my-messages").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/messages").hasRole("ADMIN")
+                        // Admin endpoints
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-                        // Protected endpoints - will use method security for finer control
+                        // Message endpoints
+                        .requestMatchers("/api/messages/**").authenticated()
+
+                        // Protected endpoints
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 

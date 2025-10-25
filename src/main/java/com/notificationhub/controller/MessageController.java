@@ -47,7 +47,7 @@ public class MessageController {
     /**
      * Obtiene los mensajes del usuario actual con filtros opcionales
      */
-    @GetMapping("/my-messages")
+    @GetMapping
     public ResponseEntity<List<MessageResponse>> getMyMessages(
             @RequestParam(required = false) DeliveryStatus status,
             @RequestParam(required = false) PlatformType platform,
