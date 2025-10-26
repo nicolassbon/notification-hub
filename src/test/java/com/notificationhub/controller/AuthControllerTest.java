@@ -5,7 +5,7 @@ import com.notificationhub.dto.response.AuthResponse;
 import com.notificationhub.dto.request.LoginRequest;
 import com.notificationhub.dto.request.RegisterRequest;
 import com.notificationhub.dto.response.RegisterResponse;
-import com.notificationhub.exception.GlobalExceptionHandler;
+import com.notificationhub.exception.handler.GlobalExceptionHandler;
 import com.notificationhub.service.IAuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

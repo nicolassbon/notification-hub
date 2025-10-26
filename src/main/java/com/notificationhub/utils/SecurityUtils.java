@@ -1,4 +1,4 @@
-package com.notificationhub.util;
+package com.notificationhub.utils;
 
 import com.notificationhub.entity.User;
 import com.notificationhub.repository.UserRepository;
@@ -16,9 +16,6 @@ public class SecurityUtils {
         this.userRepository = userRepository;
     }
 
-    /**
-     * Obtiene el usuario autenticado actualmente
-     */
     public User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -36,9 +33,6 @@ public class SecurityUtils {
         return null;
     }
 
-    /**
-     * Obtiene el username del usuario autenticado
-     */
     public String getCurrentUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -54,9 +48,6 @@ public class SecurityUtils {
         return null;
     }
 
-    /**
-     * Verifica si el usuario actual tiene un rol específico
-     */
     public boolean hasRole(String role) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -68,9 +59,6 @@ public class SecurityUtils {
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_" + role));
     }
 
-    /**
-     * Verifica si el usuario actual es admin
-     */
     public boolean isAdmin() {
         return hasRole("ADMIN");
     }

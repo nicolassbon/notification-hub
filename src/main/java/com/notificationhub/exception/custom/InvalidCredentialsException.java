@@ -1,4 +1,4 @@
-package com.notificationhub.exception;
+package com.notificationhub.exception.custom;
 
 public class InvalidCredentialsException extends RuntimeException {
     public InvalidCredentialsException(String message) {

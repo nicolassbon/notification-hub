@@ -10,8 +10,5 @@ import java.util.Optional;
 
 @Repository
 public interface DailyMessageCountRepository extends JpaRepository<DailyMessageCount, Long> {
-    /**
-     * Busca el contador de un usuario para una fecha específica
-     */
     Optional<DailyMessageCount> findByUserAndDate(User user, LocalDate date);
 }

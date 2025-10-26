@@ -1,4 +1,4 @@
-package com.notificationhub.security;
+package com.notificationhub.security.handlers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.notificationhub.dto.response.ErrorResponse;

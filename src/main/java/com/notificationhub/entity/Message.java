@@ -2,7 +2,6 @@ package com.notificationhub.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.time.LocalDateTime;
@@ -40,8 +39,8 @@ public class Message {
     private List<MessageDelivery> deliveries = new ArrayList<>();
 
     /**
-     * In tests, createdAt can be set manually to control timestamps
-     * In production, it will be set automatically
+     * En test para poder setear la fecha de creación
+     * En prod se setea automáticamente al persistir
      */
     @PrePersist
     protected void onCreate() {

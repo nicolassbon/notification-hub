@@ -16,6 +16,5 @@ public class DestinationRequest {
     @NotNull(message = "Platform is required")
     private PlatformType platform;
 
-    // Opcional: dependiendo del tipo de plataforma
     private String destination;
 }

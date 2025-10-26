@@ -1,4 +1,4 @@
-package com.notificationhub.security;
+package com.notificationhub.security.handlers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.notificationhub.dto.response.ErrorResponse;
@@ -33,7 +33,6 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
         log.error("Unauthorized error: {}", authException.getMessage());
 
-        // Verificar si hay un error específico marcado por el filtro
         String authError = (String) request.getAttribute("auth.error");
 
         ErrorResponse errorResponse;

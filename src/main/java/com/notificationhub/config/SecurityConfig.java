@@ -1,12 +1,11 @@
 package com.notificationhub.config;
 
-import com.notificationhub.security.CustomUserDetailsService;
-import com.notificationhub.security.JwtAccessDeniedHandler;
-import com.notificationhub.security.JwtAuthFilter;
-import com.notificationhub.security.JwtAuthenticationEntryPoint;
+import com.notificationhub.security.service.CustomUserDetailsService;
+import com.notificationhub.security.handlers.JwtAccessDeniedHandler;
+import com.notificationhub.security.jwt.JwtAuthFilter;
+import com.notificationhub.security.handlers.JwtAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -49,25 +48,20 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                // ✅ Configurar los handlers personalizados
                 .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)  // 401
-                        .accessDeniedHandler(jwtAccessDeniedHandler)            // 403
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                        .accessDeniedHandler(jwtAccessDeniedHandler)
                 )
 
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/error").permitAll()
 
-                        // Admin endpoints
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-                        // Message endpoints
                         .requestMatchers("/api/messages/**").authenticated()
 
-                        // Protected endpoints
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())

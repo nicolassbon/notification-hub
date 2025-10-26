@@ -3,8 +3,9 @@ package com.notificationhub.service;
 import com.notificationhub.entity.DailyMessageCount;
 import com.notificationhub.entity.User;
 import com.notificationhub.enums.Role;
-import com.notificationhub.exception.RateLimitExceededException;
+import com.notificationhub.exception.custom.RateLimitExceededException;
 import com.notificationhub.repository.DailyMessageCountRepository;
+import com.notificationhub.service.impl.RateLimitServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,7 +47,7 @@ public class RateLimitServiceImplTest {
 
     @Test
     @DisplayName("Should allow message when under daily limit")
-    void checkRateLimit_UnderLimit_AllowsMessage() {
+    void checkRateLimitUnderLimitAllowsMessage() {
         LocalDate today = LocalDate.now();
         DailyMessageCount count = DailyMessageCount.builder()
                 .user(testUser)
@@ -64,7 +65,7 @@ public class RateLimitServiceImplTest {
 
     @Test
     @DisplayName("Should throw exception when daily limit exceeded")
-    void checkRateLimit_LimitExceeded_ThrowsException() {
+    void checkRateLimitLimitExceededThrowsException() {
         LocalDate today = LocalDate.now();
         DailyMessageCount count = DailyMessageCount.builder()
                 .user(testUser)

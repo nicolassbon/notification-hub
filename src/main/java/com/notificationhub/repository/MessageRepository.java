@@ -11,18 +11,9 @@ import java.util.List;
 @Repository
 public interface MessageRepository extends JpaRepository<Message, Long> {
 
-    /**
-     * Busca mensajes por usuario (solo activos)
-     */
     List<Message> findByUserOrderByCreatedAtDesc(User user);
 
-    /**
-     * Busca mensajes por usuario en un rango de fechas
-     */
     List<Message> findByUserAndCreatedAtBetweenOrderByCreatedAtDesc(User user, LocalDateTime from, LocalDateTime to);
 
-    /**
-     * Cuenta mensajes por usuario (para métricas)
-     */
     long countByUser(User user);
 }

@@ -23,12 +23,4 @@ public class ErrorResponse {
     // Solo incluir detalles si no es nulo
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<String> details;
-
-    public ErrorResponse(int status, String error, String message, String path) {
-        this.status = status;
-        this.error = error;
-        this.message = message;
-        this.path = path;
-        this.timestamp = LocalDateTime.now();
-    }
 }

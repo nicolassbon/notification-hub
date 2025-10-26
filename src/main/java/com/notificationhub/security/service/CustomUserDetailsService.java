@@ -1,4 +1,4 @@
-package com.notificationhub.security;
+package com.notificationhub.security.service;
 
 import com.notificationhub.repository.UserRepository;
 import com.notificationhub.entity.User;
@@ -37,8 +37,6 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
 
     private String[] getAuthorities(User user) {
-        // Convert database role to Spring Security authority
-        // ADMIN -> ROLE_ADMIN, USER -> ROLE_USER
         return new String[]{"ROLE_" + user.getRole().name()};
     }
 }

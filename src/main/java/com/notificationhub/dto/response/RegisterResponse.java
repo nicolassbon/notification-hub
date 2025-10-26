@@ -15,10 +15,4 @@ public class RegisterResponse {
     private String message;
     private LocalDateTime timestamp;
     private String username;
-
-    public RegisterResponse(String message, String username) {
-        this.message = message;
-        this.username = username;
-        this.timestamp = LocalDateTime.now();
-    }
 }

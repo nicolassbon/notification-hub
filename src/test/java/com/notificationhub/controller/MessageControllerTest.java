@@ -9,7 +9,7 @@ import com.notificationhub.entity.*;
 import com.notificationhub.enums.DeliveryStatus;
 import com.notificationhub.enums.PlatformType;
 import com.notificationhub.enums.Role;
-import com.notificationhub.exception.GlobalExceptionHandler;
+import com.notificationhub.exception.handler.GlobalExceptionHandler;
 import com.notificationhub.service.MessageService;
 import com.notificationhub.mapper.MessageMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -341,7 +341,6 @@ class MessageControllerTest {
                 .thenReturn(userMessages);
         when(messageMapper.toResponseList(userMessages)).thenReturn(userResponses);
 
-        // Act & Assert
         mockMvc.perform(get(API_MESSAGES_GET)
                         .param("status", "SUCCESS"))
                 .andExpect(status().isOk())
@@ -354,7 +353,6 @@ class MessageControllerTest {
     @Test
     @DisplayName("Should return user messages with platform filter")
     void getMyMessagesWithPlatformFilterReturnsOk() throws Exception {
-        // Arrange
         List<Message> userMessages = List.of(successMessage);
         List<MessageResponse> userResponses = List.of(successResponse);
 
@@ -362,7 +360,6 @@ class MessageControllerTest {
                 .thenReturn(userMessages);
         when(messageMapper.toResponseList(userMessages)).thenReturn(userResponses);
 
-        // Act & Assert
         mockMvc.perform(get(API_MESSAGES_GET)
                         .param("platform", "DISCORD"))
                 .andExpect(status().isOk())

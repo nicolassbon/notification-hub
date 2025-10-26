@@ -1,4 +1,4 @@
-package com.notificationhub.exception;
+package com.notificationhub.exception.custom;
 
 public class MessageDeliveryException extends RuntimeException {
     public MessageDeliveryException(String message) {

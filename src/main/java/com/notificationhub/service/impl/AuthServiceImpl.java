@@ -1,4 +1,4 @@
-package com.notificationhub.service;
+package com.notificationhub.service.impl;
 
 import com.notificationhub.dto.request.LoginRequest;
 import com.notificationhub.dto.request.RegisterRequest;
@@ -6,10 +6,11 @@ import com.notificationhub.dto.response.AuthResponse;
 import com.notificationhub.dto.response.RegisterResponse;
 import com.notificationhub.entity.User;
 import com.notificationhub.enums.Role;
-import com.notificationhub.exception.InvalidCredentialsException;
+import com.notificationhub.exception.custom.InvalidCredentialsException;
 import com.notificationhub.repository.UserRepository;
-import com.notificationhub.util.JwtUtils;
-import com.notificationhub.util.SecurityUtils;
+import com.notificationhub.service.IAuthService;
+import com.notificationhub.utils.JwtUtils;
+import com.notificationhub.utils.SecurityUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -70,9 +71,6 @@ public class AuthServiceImpl implements IAuthService {
                 .build();
     }
 
-    /**
-     * Autentica un usuario existente
-     */
     public AuthResponse login(LoginRequest request) {
         log.info("Attempting login for user: {}", request.getUsername());
 
@@ -107,9 +105,6 @@ public class AuthServiceImpl implements IAuthService {
     }
 
 
-    /**
-     * Obtiene información del usuario actual (USANDO SecurityUtils)
-     */
     public User getCurrentUser() {
         User currentUser = securityUtils.getCurrentUser();
         if (currentUser == null) {
@@ -118,9 +113,6 @@ public class AuthServiceImpl implements IAuthService {
         return currentUser;
     }
 
-    /**
-     * Verifica si el usuario actual puede realizar acciones de admin
-     */
     public boolean isCurrentUserAdmin() {
         return securityUtils.isAdmin();
     }

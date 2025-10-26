@@ -2,4 +2,4 @@ spring:
   application:
     name: notification-hub
   profiles:
-    active: ${PROFILE:dev}
+    active: ${SPRING_ACTIVE_PROFILE}

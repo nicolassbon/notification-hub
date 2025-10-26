@@ -7,13 +7,14 @@ import com.notificationhub.entity.*;
 import com.notificationhub.enums.DeliveryStatus;
 import com.notificationhub.enums.PlatformType;
 import com.notificationhub.enums.Role;
-import com.notificationhub.exception.RateLimitExceededException;
+import com.notificationhub.exception.custom.RateLimitExceededException;
 import com.notificationhub.repository.DailyMessageCountRepository;
 import com.notificationhub.repository.MessageRepository;
 import com.notificationhub.repository.UserRepository;
+import com.notificationhub.service.impl.MessageServiceImpl;
 import com.notificationhub.service.platform.PlatformService;
 import com.notificationhub.service.platform.PlatformServiceFactory;
-import com.notificationhub.util.SecurityUtils;
+import com.notificationhub.utils.SecurityUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -92,7 +93,7 @@ public class MessageServiceImplTest {
 
     @Test
     @DisplayName("Should send message successfully to multiple platforms")
-    void sendMessage_ValidRequest_Success() {
+    void sendMessageValidRequestSuccess() {
         when(securityUtils.getCurrentUser()).thenReturn(testUser);
         when(platformServiceFactory.getService(PlatformType.DISCORD)).thenReturn(discordService);
         when(platformServiceFactory.getService(PlatformType.TELEGRAM)).thenReturn(telegramService);
@@ -132,7 +133,7 @@ public class MessageServiceImplTest {
 
     @Test
     @DisplayName("Should handle platform service failure gracefully")
-    void sendMessage_PlatformFails_ContinuesWithOtherPlatforms() {
+    void sendMessagePlatformFailsContinuesWithOtherPlatforms() {
         when(securityUtils.getCurrentUser()).thenReturn(testUser);
         when(platformServiceFactory.getService(PlatformType.DISCORD)).thenReturn(discordService);
         when(platformServiceFactory.getService(PlatformType.TELEGRAM)).thenReturn(telegramService);
@@ -170,7 +171,7 @@ public class MessageServiceImplTest {
 
     @Test
     @DisplayName("Should not increment rate limit when all deliveries fail")
-    void sendMessage_AllDeliveriesFail_NoRateLimitIncrement() {
+    void sendMessageAllDeliveriesFailNoRateLimitIncrement() {
         when(securityUtils.getCurrentUser()).thenReturn(testUser);
         when(platformServiceFactory.getService(PlatformType.DISCORD)).thenReturn(discordService);
         when(platformServiceFactory.getService(PlatformType.TELEGRAM)).thenReturn(telegramService);
@@ -199,7 +200,7 @@ public class MessageServiceImplTest {
 
     @Test
     @DisplayName("Should throw exception when rate limit exceeded")
-    void sendMessage_RateLimitExceeded_ThrowsException() {
+    void sendMessageRateLimitExceededThrowsException() {
         when(securityUtils.getCurrentUser()).thenReturn(testUser);
         doThrow(new RateLimitExceededException("Limit exceeded"))
                 .when(rateLimitService).checkRateLimit(testUser);
@@ -212,7 +213,7 @@ public class MessageServiceImplTest {
 
     @Test
     @DisplayName("Should throw exception when no authenticated user")
-    void sendMessage_NoAuthenticatedUser_ThrowsException() {
+    void sendMessageNoAuthenticatedUserThrowsException() {
         when(securityUtils.getCurrentUser()).thenReturn(null);
 
         assertThrows(IllegalStateException.class, () -> messageService.sendMessage(validMessageRequest));
@@ -222,7 +223,7 @@ public class MessageServiceImplTest {
 
     @Test
     @DisplayName("Should return all messages for admin")
-    void getAllMessages_AdminUser_ReturnsAllMessages() {
+    void getAllMessagesAdminUserReturnsAllMessages() {
         when(securityUtils.isAdmin()).thenReturn(true);
 
         List<Message> expectedMessages = Arrays.asList(
@@ -239,7 +240,7 @@ public class MessageServiceImplTest {
 
     @Test
     @DisplayName("Should throw exception when non-admin tries to get all messages")
-    void getAllMessages_NonAdminUser_ThrowsException() {
+    void getAllMessagesNonAdminUserThrowsException() {
         when(securityUtils.isAdmin()).thenReturn(false);
 
         assertThrows(IllegalStateException.class, () -> messageService.getAllMessages());
@@ -249,7 +250,7 @@ public class MessageServiceImplTest {
 
     @Test
     @DisplayName("Should return user messages with filters")
-    void getUserMessagesWithFilters_WithFilters_ReturnsFilteredMessages() {
+    void getUserMessagesWithFiltersWithFiltersReturnsFilteredMessages() {
         when(securityUtils.getCurrentUser()).thenReturn(testUser);
 
         List<Message> userMessages = Arrays.asList(
@@ -269,7 +270,7 @@ public class MessageServiceImplTest {
 
     @Test
     @DisplayName("Should return user messages with date range")
-    void getUserMessagesWithFilters_WithDateRange_UsesDateRangeQuery() {
+    void getUserMessagesWithFiltersWithDateRangeUsesDateRangeQuery() {
         when(securityUtils.getCurrentUser()).thenReturn(testUser);
 
         LocalDateTime from = LocalDateTime.now().minusDays(1);
@@ -289,7 +290,7 @@ public class MessageServiceImplTest {
 
     @Test
     @DisplayName("Should return metrics for all users when admin")
-    void getAllUserMetrics_AdminUser_ReturnsMetrics() {
+    void getAllUserMetricsAdminUserReturnsMetrics() {
         when(securityUtils.isAdmin()).thenReturn(true);
 
         User user1 = User.builder()
@@ -307,7 +308,6 @@ public class MessageServiceImplTest {
         List<User> users = Arrays.asList(user1, user2);
         when(userRepository.findAll()).thenReturn(users);
 
-        // User1: 10 mensajes totales, 3 hoy
         when(messageRepository.countByUser(user1)).thenReturn(10L);
         DailyMessageCount count1 = DailyMessageCount.builder()
                 .user(user1)
@@ -317,7 +317,6 @@ public class MessageServiceImplTest {
         when(dailyMessageCountRepository.findByUserAndDate(user1, LocalDate.now()))
                 .thenReturn(Optional.of(count1));
 
-        // User2: 5 mensajes totales, ninguno hoy
         when(messageRepository.countByUser(user2)).thenReturn(5L);
         when(dailyMessageCountRepository.findByUserAndDate(user2, LocalDate.now()))
                 .thenReturn(Optional.empty());
@@ -352,7 +351,7 @@ public class MessageServiceImplTest {
 
     @Test
     @DisplayName("Should throw exception when non-admin tries to get metrics")
-    void getAllUserMetrics_NonAdminUser_ThrowsException() {
+    void getAllUserMetricsNonAdminUserThrowsException() {
         when(securityUtils.isAdmin()).thenReturn(false);
 
         assertThrows(IllegalStateException.class, () -> messageService.getAllUserMetrics());
@@ -363,7 +362,7 @@ public class MessageServiceImplTest {
 
     @Test
     @DisplayName("Should handle user with no messages in metrics")
-    void getAllUserMetrics_UserWithNoMessages_ReturnsZeroMetrics() {
+    void getAllUserMetricsUserWithNoMessagesReturnsZeroMetrics() {
         when(securityUtils.isAdmin()).thenReturn(true);
 
         User newUser = User.builder()
@@ -389,7 +388,7 @@ public class MessageServiceImplTest {
 
     @Test
     @DisplayName("Should handle user who reached daily limit")
-    void getAllUserMetrics_UserReachedLimit_ShowsZeroRemaining() {
+    void getAllUserMetricsUserReachedLimitShowsZeroRemaining() {
         when(securityUtils.isAdmin()).thenReturn(true);
 
         User user = User.builder()
@@ -419,7 +418,7 @@ public class MessageServiceImplTest {
 
     @Test
     @DisplayName("Should handle user who exceeded daily limit")
-    void getAllUserMetrics_UserExceededLimit_ShowsZeroRemaining() {
+    void getAllUserMetricsUserExceededLimitShowsZeroRemaining() {
         when(securityUtils.isAdmin()).thenReturn(true);
 
         User user = User.builder()
@@ -449,7 +448,7 @@ public class MessageServiceImplTest {
 
     @Test
     @DisplayName("Should return empty list when no active users")
-    void getAllUserMetrics_NoActiveUsers_ReturnsEmptyList() {
+    void getAllUserMetricsNoActiveUsersReturnsEmptyList() {
         when(securityUtils.isAdmin()).thenReturn(true);
         when(userRepository.findAll()).thenReturn(List.of());
 

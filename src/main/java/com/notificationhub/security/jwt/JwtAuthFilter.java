@@ -1,6 +1,7 @@
-package com.notificationhub.security;
+package com.notificationhub.security.jwt;
 
-import com.notificationhub.util.JwtUtils;
+import com.notificationhub.security.service.CustomUserDetailsService;
+import com.notificationhub.utils.JwtUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,12 +36,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             String jwt = parseJwt(request);
 
             if (jwt != null) {
-                // Validar token
                 if (!jwtUtils.validateToken(jwt)) {
-                    // Marcar como token inválido y dejar que el entry point lo maneje
+                    // Entry Point: Token inválido - 401
                     request.setAttribute("auth.error", "INVALID_TOKEN");
                 } else {
-                    // Token válido - autenticar
                     String username = jwtUtils.extractUsername(jwt);
                     UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
@@ -53,10 +52,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 }
             }
         } catch (UsernameNotFoundException e) {
-            // Usuario no encontrado - 401
             request.setAttribute("auth.error", "USER_NOT_FOUND");
         } catch (Exception e) {
-            // Otro error de autenticación - 401
             request.setAttribute("auth.error", "AUTH_FAILED");
         }
 

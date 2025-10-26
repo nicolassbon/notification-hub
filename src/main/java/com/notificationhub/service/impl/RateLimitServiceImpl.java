@@ -1,9 +1,10 @@
-package com.notificationhub.service;
+package com.notificationhub.service.impl;
 
 import com.notificationhub.entity.DailyMessageCount;
 import com.notificationhub.entity.User;
-import com.notificationhub.exception.RateLimitExceededException;
+import com.notificationhub.exception.custom.RateLimitExceededException;
 import com.notificationhub.repository.DailyMessageCountRepository;
+import com.notificationhub.service.RateLimitService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,12 +21,6 @@ public class RateLimitServiceImpl implements RateLimitService {
         this.dailyMessageCountRepository = dailyMessageCountRepository;
     }
 
-    /**
-     * Verifica si el usuario puede enviar un mensaje según su límite diario
-     *
-     * @param user Usuario a verificar
-     * @throws RateLimitExceededException si el usuario alcanzó su límite
-     */
     public void checkRateLimit(User user) {
         LocalDate today = LocalDate.now();
 
@@ -43,11 +38,6 @@ public class RateLimitServiceImpl implements RateLimitService {
         }
     }
 
-    /**
-     * Incrementa el contador de mensajes del usuario para hoy
-     *
-     * @param user Usuario que envió el mensaje
-     */
     public void incrementCounter(User user) {
         LocalDate today = LocalDate.now();
 
@@ -62,12 +52,6 @@ public class RateLimitServiceImpl implements RateLimitService {
                 user.getUsername(), count.getCount(), user.getDailyMessageLimit());
     }
 
-    /**
-     * Obtiene cuántos mensajes puede enviar el usuario hoy (Metrics Admin)
-     *
-     * @param user Usuario
-     * @return Cantidad de mensajes restantes
-     */
     public int getRemainingMessages(User user) {
         LocalDate today = LocalDate.now();
 
@@ -78,9 +62,6 @@ public class RateLimitServiceImpl implements RateLimitService {
         return count.getRemainingMessages(user.getDailyMessageLimit());
     }
 
-    /**
-     * Crea un nuevo contador diario para el usuario
-     */
     private DailyMessageCount createNewCounter(User user, LocalDate date) {
         log.info("Creating new daily message counter for user {} on {}", user.getUsername(), date);
 

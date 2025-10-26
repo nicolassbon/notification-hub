@@ -188,7 +188,7 @@ public class UserRepositoryTest {
     @Test
     @DisplayName("Should handle case sensitivity in usernames")
     void findByUsernameWithDifferentCaseReturnsEmpty() {
-        Optional<User> foundUser = userRepository.findByUsername("TESTUSER"); // uppercase
+        Optional<User> foundUser = userRepository.findByUsername("TESTUSER");
 
         assertFalse(foundUser.isPresent());
     }

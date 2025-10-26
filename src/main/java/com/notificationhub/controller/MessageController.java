@@ -38,9 +38,6 @@ public class MessageController {
         this.messageMapper = messageMapper;
     }
 
-    /**
-     * Envía un mensaje a múltiples plataformas
-     */
     @PostMapping("/send")
     @Operation(
             summary = "Send message to multiple platforms",
@@ -87,9 +84,6 @@ public class MessageController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    /**
-     * Obtiene los mensajes del usuario actual con filtros opcionales
-     */
     @GetMapping
     @Operation(
             summary = "Get my messages",
@@ -150,4 +144,5 @@ public class MessageController {
         log.info("Returning {} messages to user", responses.size());
         return ResponseEntity.ok(responses);
     }
+
 }

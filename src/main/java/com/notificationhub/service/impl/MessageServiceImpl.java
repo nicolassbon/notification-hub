@@ -1,4 +1,4 @@
-package com.notificationhub.service;
+package com.notificationhub.service.impl;
 
 import com.notificationhub.dto.criteria.MessageFilterCriteria;
 import com.notificationhub.dto.request.DestinationRequest;
@@ -13,9 +13,11 @@ import com.notificationhub.enums.PlatformType;
 import com.notificationhub.repository.DailyMessageCountRepository;
 import com.notificationhub.repository.MessageRepository;
 import com.notificationhub.repository.UserRepository;
+import com.notificationhub.service.MessageService;
+import com.notificationhub.service.RateLimitService;
 import com.notificationhub.service.platform.PlatformService;
 import com.notificationhub.service.platform.PlatformServiceFactory;
-import com.notificationhub.util.SecurityUtils;
+import com.notificationhub.utils.SecurityUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,16 +54,12 @@ public class MessageServiceImpl implements MessageService {
         this.securityUtils = securityUtils;
     }
 
-    /**
-     * Envia un mensaje a multiples plataformas
-     */
     public Message sendMessage(MessageRequest request) {
         log.info("Processing message request with {} destinations", request.getDestinations().size());
 
         User currentUser = getAuthenticatedUser();
         log.info("User {} is sending a message", currentUser.getUsername());
 
-        // Puede lanzar RateLimitExceededException
         rateLimitService.checkRateLimit(currentUser);
 
         Message message = Message.builder()
@@ -75,7 +73,6 @@ public class MessageServiceImpl implements MessageService {
         Message savedMessage = messageRepository.save(message);
         log.info("Message saved with {} deliveries", deliveries.size());
 
-        // Si las dos son exitosas, cuenta como 1 solo mensaje
         updateRateLimitIfNeeded(currentUser, deliveries);
 
         logMessageCompletion(savedMessage, deliveries);
@@ -83,11 +80,6 @@ public class MessageServiceImpl implements MessageService {
         return savedMessage;
     }
 
-    /**
-     * Obtiene todos los mensajes del sistema (ADMIN)
-     *
-     * @return Lista de todos los mensajes
-     */
     public List<Message> getAllMessages() {
         if (!securityUtils.isAdmin()) {
             throw new IllegalStateException("Only admins can view all messages");
@@ -100,15 +92,6 @@ public class MessageServiceImpl implements MessageService {
         return messages;
     }
 
-    /**
-     * Obtiene mensajes del usuario con filtros
-     *
-     * @param status   Filtro por estado (opcional)
-     * @param platform Filtro por plataforma (opcional)
-     * @param from     Fecha desde (opcional)
-     * @param to       Fecha hasta (opcional)
-     * @return Lista de mensajes filtrados
-     */
     public List<Message> getUserMessagesWithFilters(
             DeliveryStatus status,
             PlatformType platform,
@@ -131,9 +114,6 @@ public class MessageServiceImpl implements MessageService {
         return filteredMessages;
     }
 
-    /**
-     * Obtiene métricas de todos los usuarios (solo ADMIN)
-     */
     public List<MetricsResponse> getAllUserMetrics() {
         if (!securityUtils.isAdmin()) {
             throw new IllegalStateException("Only admins can view metrics");

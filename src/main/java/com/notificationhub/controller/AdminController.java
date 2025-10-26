@@ -35,9 +35,6 @@ public class AdminController {
         this.messageMapper = messageMapper;
     }
 
-    /**
-     * Obtiene todos los mensajes del sistema (solo ADMIN)
-     */
     @GetMapping("/messages")
     @Operation(
             summary = "Get all messages (Admin only)",
@@ -72,10 +69,6 @@ public class AdminController {
         return ResponseEntity.ok(responses);
     }
 
-    /**
-     * Obtiene métricas de todos los usuarios (solo ADMIN)
-     * Requirement: "access a special metrics endpoint"
-     */
     @GetMapping("/metrics")
     @Operation(
             summary = "Get system metrics (Admin only)",

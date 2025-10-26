@@ -1,4 +1,4 @@
-package com.notificationhub.util;
+package com.notificationhub.utils;
 
 import com.notificationhub.config.JwtProperties;
 import org.junit.jupiter.api.BeforeEach;

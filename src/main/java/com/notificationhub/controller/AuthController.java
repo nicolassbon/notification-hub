@@ -116,4 +116,5 @@ public class AuthController {
         UserResponse response = userMapper.toResponse(user);
         return ResponseEntity.ok(response);
     }
+
 }

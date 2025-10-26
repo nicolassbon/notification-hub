@@ -3,7 +3,7 @@ package com.notificationhub.service.platform.discord;
 import com.notificationhub.entity.MessageDelivery;
 import com.notificationhub.enums.DeliveryStatus;
 import com.notificationhub.enums.PlatformType;
-import com.notificationhub.exception.MessageDeliveryException;
+import com.notificationhub.exception.custom.MessageDeliveryException;
 import com.notificationhub.service.platform.PlatformService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
