@@ -97,11 +97,12 @@ public class AdminController {
             )
     })
     public ResponseEntity<List<MetricsResponse>> getMetrics() {
-        log.info("Admin requesting user metrics");
+        log.info("Admin requesting system metrics");
 
-        // TODO: Implementar después
-        // List<MetricsResponse> metrics = metricsService.getAllUserMetrics();
+        List<MetricsResponse> metrics = messageService.getAllUserMetrics();
 
-        return ResponseEntity.ok(List.of());
+        log.info("Returning metrics for {} users", metrics.size());
+        return ResponseEntity.ok(metrics);
     }
+
 }

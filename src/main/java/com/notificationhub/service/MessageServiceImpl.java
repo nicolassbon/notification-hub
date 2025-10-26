@@ -3,12 +3,16 @@ package com.notificationhub.service;
 import com.notificationhub.dto.criteria.MessageFilterCriteria;
 import com.notificationhub.dto.request.DestinationRequest;
 import com.notificationhub.dto.request.MessageRequest;
+import com.notificationhub.dto.response.MetricsResponse;
+import com.notificationhub.entity.DailyMessageCount;
 import com.notificationhub.entity.Message;
 import com.notificationhub.entity.MessageDelivery;
 import com.notificationhub.entity.User;
 import com.notificationhub.enums.DeliveryStatus;
 import com.notificationhub.enums.PlatformType;
+import com.notificationhub.repository.DailyMessageCountRepository;
 import com.notificationhub.repository.MessageRepository;
+import com.notificationhub.repository.UserRepository;
 import com.notificationhub.service.platform.PlatformService;
 import com.notificationhub.service.platform.PlatformServiceFactory;
 import com.notificationhub.util.SecurityUtils;
@@ -16,9 +20,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -27,15 +33,21 @@ public class MessageServiceImpl implements MessageService {
 
     private final MessageRepository messageRepository;
     private final PlatformServiceFactory platformServiceFactory;
+    private final UserRepository userRepository;
+    private final DailyMessageCountRepository dailyMessageCountRepository;
     private final RateLimitService rateLimitService;
     private final SecurityUtils securityUtils;
 
     public MessageServiceImpl(MessageRepository messageRepository,
                               PlatformServiceFactory platformServiceFactory,
+                              UserRepository userRepository,
+                              DailyMessageCountRepository dailyMessageCountRepository,
                               RateLimitService rateLimitService,
                               SecurityUtils securityUtils) {
         this.messageRepository = messageRepository;
         this.platformServiceFactory = platformServiceFactory;
+        this.userRepository = userRepository;
+        this.dailyMessageCountRepository = dailyMessageCountRepository;
         this.rateLimitService = rateLimitService;
         this.securityUtils = securityUtils;
     }
@@ -117,6 +129,39 @@ public class MessageServiceImpl implements MessageService {
 
         log.info("Retrieved {} filtered messages for user {}", filteredMessages.size(), currentUser.getUsername());
         return filteredMessages;
+    }
+
+    /**
+     * Obtiene métricas de todos los usuarios (solo ADMIN)
+     */
+    public List<MetricsResponse> getAllUserMetrics() {
+        if (!securityUtils.isAdmin()) {
+            throw new IllegalStateException("Only admins can view metrics");
+        }
+
+        List<User> users = userRepository.findAll();
+        LocalDate today = LocalDate.now();
+
+        return users.stream()
+                .map(user -> {
+                    long totalMessages = messageRepository.countByUser(user);
+
+                    DailyMessageCount todayCount = dailyMessageCountRepository
+                            .findByUserAndDate(user, today)
+                            .orElse(null);
+
+                    int messagesSentToday = todayCount != null ? todayCount.getCount() : 0;
+                    int remainingToday = user.getDailyMessageLimit() - messagesSentToday;
+
+                    return MetricsResponse.builder()
+                            .username(user.getUsername())
+                            .totalMessagesSent(totalMessages)
+                            .messagesSentToday(messagesSentToday)
+                            .remainingMessagesToday(Math.max(0, remainingToday))
+                            .dailyLimit(user.getDailyMessageLimit())
+                            .build();
+                })
+                .collect(Collectors.toList());
     }
 
     private User getAuthenticatedUser() {

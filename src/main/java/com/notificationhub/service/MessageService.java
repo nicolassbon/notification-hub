@@ -1,6 +1,7 @@
 package com.notificationhub.service;
 
 import com.notificationhub.dto.request.MessageRequest;
+import com.notificationhub.dto.response.MetricsResponse;
 import com.notificationhub.entity.Message;
 import com.notificationhub.enums.DeliveryStatus;
 import com.notificationhub.enums.PlatformType;
@@ -18,4 +19,6 @@ public interface MessageService {
             PlatformType platform,
             LocalDateTime from,
             LocalDateTime to);
+
+    List<MetricsResponse> getAllUserMetrics();
 }
