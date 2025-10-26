@@ -163,7 +163,7 @@ public class UserRepositoryTest {
         activeUser.setDailyMessageLimit(200);
         activeUser.setUpdatedAt(LocalDateTime.now());
 
-        User updatedUser = userRepository.save(activeUser);
+        userRepository.save(activeUser);
         entityManager.flush();
         entityManager.clear();
 

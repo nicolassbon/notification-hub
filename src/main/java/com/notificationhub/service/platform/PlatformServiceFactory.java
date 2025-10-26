@@ -39,15 +39,4 @@ public class PlatformServiceFactory {
 
         return service;
     }
-
-    /**
-     * Verifica si una plataforma está disponible y configurada
-     *
-     * @param platformType Tipo de plataforma
-     * @return true si está disponible, false en caso contrario
-     */
-    public boolean isPlatformAvailable(PlatformType platformType) {
-        PlatformService service = services.get(platformType);
-        return service != null && service.isConfigured();
-    }
 }

@@ -31,7 +31,6 @@ public class Message {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -39,6 +38,17 @@ public class Message {
     @Builder.Default
     @ToString.Exclude
     private List<MessageDelivery> deliveries = new ArrayList<>();
+
+    /**
+     * In tests, createdAt can be set manually to control timestamps
+     * In production, it will be set automatically
+     */
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+    }
 
     public void addDelivery(MessageDelivery delivery) {
         deliveries.add(delivery);
