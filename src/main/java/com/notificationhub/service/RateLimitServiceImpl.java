@@ -63,7 +63,7 @@ public class RateLimitServiceImpl implements RateLimitService {
     }
 
     /**
-     * Obtiene cuántos mensajes puede enviar el usuario hoy
+     * Obtiene cuántos mensajes puede enviar el usuario hoy (Metrics Admin)
      *
      * @param user Usuario
      * @return Cantidad de mensajes restantes
