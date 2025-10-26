@@ -3,6 +3,7 @@ package com.notificationhub.service;
 import com.notificationhub.dto.response.AuthResponse;
 import com.notificationhub.dto.request.LoginRequest;
 import com.notificationhub.dto.request.RegisterRequest;
+import com.notificationhub.dto.response.RegisterResponse;
 import com.notificationhub.entity.User;
 import com.notificationhub.enums.Role;
 import com.notificationhub.exception.InvalidCredentialsException;
@@ -83,26 +84,25 @@ public class AuthServiceImplTest {
     }
 
     @Test
-    @DisplayName("Should register new user successfully")
-    void registerNewUserReturnsAuthResponse() {
+    @DisplayName("Should register new user successfully without JWT token")
+    void registerNewUserReturnsRegisterResponse() {
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.empty());
         when(passwordEncoder.encode("password123")).thenReturn("$2a$10$encodedPassword");
         when(userRepository.save(any(User.class))).thenReturn(testUser);
-        when(jwtUtils.generateToken(any(UserDetails.class))).thenReturn("jwt-token");
-        when(jwtUtils.getExpirationTime()).thenReturn(86400000L);
 
-        AuthResponse response = authService.register(registerRequest);
+        RegisterResponse response = authService.register(registerRequest);
 
         assertNotNull(response);
-        assertEquals("jwt-token", response.getToken());
+        assertEquals("User registered successfully", response.getMessage());
         assertEquals("testuser", response.getUsername());
-        assertEquals("USER", response.getRole());
-        assertEquals(86400000L, response.getExpiresIn());
+        assertNotNull(response.getTimestamp());
+
+        verify(jwtUtils, never()).generateToken(any(UserDetails.class));
+        verify(jwtUtils, never()).getExpirationTime();
 
         verify(userRepository).findByUsername("testuser");
         verify(passwordEncoder).encode("password123");
         verify(userRepository).save(any(User.class));
-        verify(jwtUtils).generateToken(any(UserDetails.class));
     }
 
     @Test
@@ -118,10 +118,11 @@ public class AuthServiceImplTest {
         assertEquals("Username already exists", exception.getMessage());
         verify(userRepository).findByUsername("testuser");
         verify(userRepository, never()).save(any(User.class));
+        verify(jwtUtils, never()).generateToken(any(UserDetails.class));
     }
 
     @Test
-    @DisplayName("Should login user successfully with valid credentials")
+    @DisplayName("Should login user successfully with valid credentials and return JWT token")
     void loginValidCredentialsReturnsAuthResponse() {
         Authentication authentication = mock(Authentication.class);
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
@@ -233,15 +234,15 @@ public class AuthServiceImplTest {
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.empty());
         when(passwordEncoder.encode("password123")).thenReturn("$2a$10$encodedPassword");
         when(userRepository.save(any(User.class))).thenReturn(testUser);
-        when(jwtUtils.generateToken(any(UserDetails.class))).thenReturn("jwt-token");
-        when(jwtUtils.getExpirationTime()).thenReturn(86400000L);
 
-        authService.register(registerRequest);
+        RegisterResponse response = authService.register(registerRequest);
 
+        assertNotNull(response);
         verify(passwordEncoder).encode("password123");
         verify(userRepository).save(argThat(user ->
                 user.getPasswordHash().equals("$2a$10$encodedPassword")
         ));
+        verify(jwtUtils, never()).generateToken(any(UserDetails.class));
     }
 
     @Test
@@ -250,15 +251,15 @@ public class AuthServiceImplTest {
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.empty());
         when(passwordEncoder.encode("password123")).thenReturn("$2a$10$encodedPassword");
         when(userRepository.save(any(User.class))).thenReturn(testUser);
-        when(jwtUtils.generateToken(any(UserDetails.class))).thenReturn("jwt-token");
-        when(jwtUtils.getExpirationTime()).thenReturn(86400000L);
 
-        authService.register(registerRequest);
+        RegisterResponse response = authService.register(registerRequest);
 
+        assertNotNull(response);
         verify(userRepository).save(argThat(user ->
                 user.getRole() == Role.USER &&
                         user.getDailyMessageLimit() == 100
         ));
+        verify(jwtUtils, never()).generateToken(any(UserDetails.class));
     }
 
     @Test
@@ -276,21 +277,16 @@ public class AuthServiceImplTest {
     }
 
     @Test
-    @DisplayName("Should create UserDetails with correct authorities for JWT generation")
-    void registerCreatesUserDetailsWithCorrectAuthorities() {
+    @DisplayName("Should NOT create UserDetails for JWT during registration")
+    void registerDoesNotCreateUserDetailsForJWT() {
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.empty());
         when(passwordEncoder.encode("password123")).thenReturn("$2a$10$encodedPassword");
         when(userRepository.save(any(User.class))).thenReturn(testUser);
-        when(jwtUtils.generateToken(any(UserDetails.class))).thenReturn("jwt-token");
-        when(jwtUtils.getExpirationTime()).thenReturn(86400000L);
 
-        authService.register(registerRequest);
+        RegisterResponse response = authService.register(registerRequest);
 
-        // Verify that JWT generation receives UserDetails with correct authorities
-        verify(jwtUtils).generateToken(argThat(userDetails ->
-                userDetails.getAuthorities().stream()
-                        .anyMatch(auth -> auth.getAuthority().equals("ROLE_USER"))
-        ));
+        assertNotNull(response);
+        verify(jwtUtils, never()).generateToken(any(UserDetails.class));
     }
 
     @Test

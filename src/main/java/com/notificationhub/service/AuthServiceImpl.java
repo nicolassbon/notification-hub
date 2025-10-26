@@ -3,6 +3,7 @@ package com.notificationhub.service;
 import com.notificationhub.dto.request.LoginRequest;
 import com.notificationhub.dto.request.RegisterRequest;
 import com.notificationhub.dto.response.AuthResponse;
+import com.notificationhub.dto.response.RegisterResponse;
 import com.notificationhub.entity.User;
 import com.notificationhub.enums.Role;
 import com.notificationhub.exception.InvalidCredentialsException;
@@ -43,7 +44,7 @@ public class AuthServiceImpl implements IAuthService {
     }
 
     @Transactional
-    public AuthResponse register(RegisterRequest request) {
+    public RegisterResponse register(RegisterRequest request) {
         log.info("Attempting to register user: {}", request.getUsername());
 
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
@@ -62,19 +63,10 @@ public class AuthServiceImpl implements IAuthService {
         User savedUser = userRepository.save(user);
         log.info("User registered successfully: {}", savedUser.getUsername());
 
-        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
+        return RegisterResponse.builder()
+                .message("User registered successfully")
                 .username(savedUser.getUsername())
-                .password(savedUser.getPasswordHash())
-                .authorities("ROLE_" + savedUser.getRole().name())
-                .build();
-
-        String token = jwtUtils.generateToken(userDetails);
-
-        return AuthResponse.builder()
-                .token(token)
-                .expiresIn(jwtUtils.getExpirationTime())
-                .username(savedUser.getUsername())
-                .role(savedUser.getRole().name())
+                .timestamp(LocalDateTime.now())
                 .build();
     }
 

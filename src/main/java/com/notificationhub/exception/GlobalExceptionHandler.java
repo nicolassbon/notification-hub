@@ -82,6 +82,13 @@ public class GlobalExceptionHandler {
                 .body(buildErrorResponse(HttpStatus.BAD_REQUEST, "Bad Request", message, request));
     }
 
+    @ExceptionHandler({InvalidCredentialsException.class})
+    public ResponseEntity<ErrorResponse> handleInvalidCredentials(
+            InvalidCredentialsException ex, HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(buildErrorResponse(HttpStatus.UNAUTHORIZED, "Unauthorized", ex.getMessage(), request));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationErrors(
             MethodArgumentNotValidException ex, HttpServletRequest request) {

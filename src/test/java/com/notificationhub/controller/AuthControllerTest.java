@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.notificationhub.dto.response.AuthResponse;
 import com.notificationhub.dto.request.LoginRequest;
 import com.notificationhub.dto.request.RegisterRequest;
+import com.notificationhub.dto.response.RegisterResponse;
 import com.notificationhub.exception.GlobalExceptionHandler;
 import com.notificationhub.service.IAuthService;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,6 +17,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import java.time.LocalDateTime;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -42,6 +45,7 @@ public class AuthControllerTest {
     private RegisterRequest validRegisterRequest;
     private LoginRequest validLoginRequest;
     private AuthResponse authResponse;
+    private RegisterResponse registerResponse;
 
     @BeforeEach
     void setUp() {
@@ -53,6 +57,12 @@ public class AuthControllerTest {
         validRegisterRequest = new RegisterRequest("testuser", "password123");
         validLoginRequest = new LoginRequest("testuser", "password123");
 
+        registerResponse = RegisterResponse.builder()
+                .message("User registered successfully")
+                .username("testuser")
+                .timestamp(LocalDateTime.now())
+                .build();
+
         authResponse = AuthResponse.builder()
                 .token("jwt-token")
                 .expiresIn(86400000L)
@@ -62,9 +72,9 @@ public class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("Should use correct content type in responses")
+    @DisplayName("Should use correct content type in register responses")
     void registerResponseHasCorrectContentType() throws Exception {
-        when(authService.register(any(RegisterRequest.class))).thenReturn(authResponse);
+        when(authService.register(any(RegisterRequest.class))).thenReturn(registerResponse);
 
         mockMvc.perform(post(API_REGISTER)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -73,25 +83,25 @@ public class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("Should register user successfully and return 201 CREATED")
+    @DisplayName("Should register user successfully and return 201 CREATED with success message")
     void registerValidRequestReturnsCreated() throws Exception {
-        when(authService.register(any(RegisterRequest.class))).thenReturn(authResponse);
+        when(authService.register(any(RegisterRequest.class))).thenReturn(registerResponse);
 
         mockMvc.perform(post(API_REGISTER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRegisterRequest)))
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.token").value("jwt-token"))
+                .andExpect(jsonPath("$.message").value("User registered successfully"))
                 .andExpect(jsonPath("$.username").value("testuser"))
-                .andExpect(jsonPath("$.role").value("USER"))
-                .andExpect(jsonPath("$.expiresIn").value(86400000L));
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.token").doesNotExist());
 
         verify(authService).register(any(RegisterRequest.class));
     }
 
     @Test
-    @DisplayName("Should login user successfully and return 200 OK")
+    @DisplayName("Should login user successfully and return 200 OK with JWT token")
     void loginValidRequestReturnsOk() throws Exception {
         when(authService.login(any(LoginRequest.class))).thenReturn(authResponse);
 
@@ -215,7 +225,7 @@ public class AuthControllerTest {
         mockMvc.perform(post(API_REGISTER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRegisterRequest)))
-                .andExpect(status().isBadRequest()) // IllegalArgumentException → 400
+                .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
@@ -233,11 +243,25 @@ public class AuthControllerTest {
         mockMvc.perform(post(API_LOGIN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validLoginRequest)))
-                .andExpect(status().isInternalServerError()) // RuntimeException → 500
+                .andExpect(status().isInternalServerError())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status").value(500))
                 .andExpect(jsonPath("$.error").value("Internal Server Error"));
 
         verify(authService).login(any(LoginRequest.class));
+    }
+
+    @Test
+    @DisplayName("Should NOT return token in register response")
+    void registerShouldNotReturnToken() throws Exception {
+        when(authService.register(any(RegisterRequest.class))).thenReturn(registerResponse);
+
+        mockMvc.perform(post(API_REGISTER)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validRegisterRequest)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.token").doesNotExist())
+                .andExpect(jsonPath("$.expiresIn").doesNotExist())
+                .andExpect(jsonPath("$.role").doesNotExist());
     }
 }

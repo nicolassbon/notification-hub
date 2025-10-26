@@ -3,6 +3,7 @@ package com.notificationhub.controller;
 import com.notificationhub.dto.request.LoginRequest;
 import com.notificationhub.dto.request.RegisterRequest;
 import com.notificationhub.dto.response.AuthResponse;
+import com.notificationhub.dto.response.RegisterResponse;
 import com.notificationhub.dto.response.UserResponse;
 import com.notificationhub.entity.User;
 import com.notificationhub.mapper.UserMapper;
@@ -36,7 +37,7 @@ public class AuthController {
     @PostMapping("/register")
     @Operation(
             summary = "Register new user",
-            description = "Creates a new user account with USER role and default message limit (100 messages/day). Returns JWT token for immediate authentication."
+            description = "Creates a new user account with USER role and default message limit (100 messages/day). Returns success message without JWT token."
     )
     @ApiResponses(value = {
             @ApiResponse(
@@ -44,7 +45,7 @@ public class AuthController {
                     description = "User registered successfully",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = AuthResponse.class)
+                            schema = @Schema(implementation = RegisterResponse.class)
                     )
             ),
             @ApiResponse(
@@ -52,10 +53,10 @@ public class AuthController {
                     description = "Invalid input data or username already exists"
             )
     })
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
+    public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
         log.info("Registration request received for username: {}", request.getUsername());
 
-        AuthResponse response = authService.register(request);
+        RegisterResponse response = authService.register(request);
 
         log.info("User registered successfully: {}", response.getUsername());
 
