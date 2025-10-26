@@ -67,7 +67,8 @@ public class TelegramService implements PlatformService {
                     })
                     .block();
 
-            if (response != null && Boolean.TRUE.equals(response.get("ok"))) {
+            boolean success = response != null && Boolean.TRUE.equals(response.get("ok"));
+            if (success) {
                 log.info("Message sent successfully to Telegram");
                 delivery.markAsSuccess(response);
             } else {
