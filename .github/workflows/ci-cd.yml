@@ -30,6 +30,9 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Give execute permission to mvnw
+      run: chmod +x ./mvnw
+
     - name: Set up JDK 21
       uses: actions/setup-java@v4
       with:
@@ -55,6 +58,9 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
+    - name: Give execute permission to mvnw
+      run: chmod +x ./mvnw
 
     - name: Set up JDK 21
       uses: actions/setup-java@v4
