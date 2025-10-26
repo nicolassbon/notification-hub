@@ -91,30 +91,4 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/me")
-    @Operation(
-            summary = "Get current user",
-            description = "Returns information about the currently authenticated user",
-            security = @SecurityRequirement(name = "bearer-jwt")
-    )
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "User information retrieved successfully",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = UserResponse.class)
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = "Not authenticated"
-            )
-    })
-    public ResponseEntity<UserResponse> getCurrentUser() {
-        User user = authService.getCurrentUser();
-        UserResponse response = userMapper.toResponse(user);
-        return ResponseEntity.ok(response);
-    }
-
 }
