@@ -55,11 +55,10 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/error").permitAll()
 
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-
                         .requestMatchers("/api/messages/**").authenticated()
 
                         .anyRequest().authenticated()
