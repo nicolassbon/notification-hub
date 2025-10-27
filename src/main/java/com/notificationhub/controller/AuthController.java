@@ -3,17 +3,15 @@ package com.notificationhub.controller;
 import com.notificationhub.dto.request.LoginRequest;
 import com.notificationhub.dto.request.RegisterRequest;
 import com.notificationhub.dto.response.AuthResponse;
+import com.notificationhub.dto.response.ErrorResponse;
 import com.notificationhub.dto.response.RegisterResponse;
-import com.notificationhub.dto.response.UserResponse;
-import com.notificationhub.entity.User;
-import com.notificationhub.mapper.UserMapper;
 import com.notificationhub.service.IAuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -27,17 +25,15 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class AuthController {
     private final IAuthService authService;
-    private final UserMapper userMapper;
 
-    public AuthController(IAuthService authService, UserMapper userMapper) {
+    public AuthController(IAuthService authService) {
         this.authService = authService;
-        this.userMapper = userMapper;
     }
 
     @PostMapping("/register")
     @Operation(
             summary = "Register new user",
-            description = "Creates a new user account with USER role and default message limit (100 messages/day). Returns success message without JWT token."
+            description = "Creates a new user account with USER role and default message limit. Returns success message without JWT token."
     )
     @ApiResponses(value = {
             @ApiResponse(
@@ -50,7 +46,11 @@ public class AuthController {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Invalid input data or username already exists"
+                    description = "Invalid request data",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
             )
     })
     public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
@@ -78,8 +78,30 @@ public class AuthController {
                     )
             ),
             @ApiResponse(
-                    responseCode = "401",
-                    description = "Invalid credentials"
+                    responseCode = "200",
+                    description = "Login successful",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = AuthResponse.class),
+                            examples = @ExampleObject(
+                                    value = """
+                                            {
+                                              "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                                              "username": "nico",
+                                              "role": "password123",
+                                              "expiresIn": 86400000
+                                            }
+                                            """
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid input data",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
             )
     })
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {

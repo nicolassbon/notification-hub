@@ -1,5 +1,6 @@
 package com.notificationhub.controller;
 
+import com.notificationhub.dto.response.ErrorResponse;
 import com.notificationhub.dto.response.MessageResponse;
 import com.notificationhub.dto.response.MetricsResponse;
 import com.notificationhub.entity.Message;
@@ -7,6 +8,7 @@ import com.notificationhub.mapper.MessageMapper;
 import com.notificationhub.service.MessageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -52,11 +54,41 @@ public class AdminController {
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "Not authenticated - JWT token required"
+                    description = "Not authenticated - JWT token required",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(
+                                    value = """
+                                            {
+                                              "status": 401,
+                                              "error": "Unauthorized",
+                                              "message": "Invalid or expired JWT token",
+                                              "timestamp": "2025-10-27T11:02:15.6462631",
+                                              "path": "/api/admin/messages"
+                                            }
+                                            """
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "Access denied - ADMIN role required"
+                    description = "Access denied - ADMIN role required",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(
+                                    value = """
+                                            {
+                                              "status": 403,
+                                              "error": "Forbidden",
+                                              "message": "Access denied: insufficient permissions",
+                                              "timestamp": "2025-10-27T11:05:19.0751069",
+                                              "path": "/api/admin/messages"
+                                            }
+                                            """
+                            )
+                    )
             )
     })
     public ResponseEntity<List<MessageResponse>> getAllMessages() {
@@ -82,11 +114,41 @@ public class AdminController {
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "Not authenticated"
+                    description = "Not authenticated - JWT token required",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(
+                                    value = """
+                                            {
+                                              "status": 401,
+                                              "error": "Unauthorized",
+                                              "message": "Invalid or expired JWT token",
+                                              "timestamp": "2025-10-27T11:02:15.6462631",
+                                              "path": "/api/admin/metrics"
+                                            }
+                                            """
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "Access denied - ADMIN role required"
+                    description = "Access denied - ADMIN role required",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(
+                                    value = """
+                                            {
+                                              "status": 403,
+                                              "error": "Forbidden",
+                                              "message": "Access denied: insufficient permissions",
+                                              "timestamp": "2025-10-27T11:05:19.0751069",
+                                              "path": "/api/admin/metrics"
+                                            }
+                                            """
+                            )
+                    )
             )
     })
     public ResponseEntity<List<MetricsResponse>> getMetrics() {

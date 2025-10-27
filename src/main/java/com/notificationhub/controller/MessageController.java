@@ -1,6 +1,7 @@
 package com.notificationhub.controller;
 
 import com.notificationhub.dto.request.MessageRequest;
+import com.notificationhub.dto.response.ErrorResponse;
 import com.notificationhub.dto.response.MessageResponse;
 import com.notificationhub.entity.Message;
 import com.notificationhub.enums.DeliveryStatus;
@@ -10,6 +11,7 @@ import com.notificationhub.service.MessageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -41,9 +43,17 @@ public class MessageController {
     @PostMapping("/send")
     @Operation(
             summary = "Send message to multiple platforms",
-            description = "Send a message to one or more platforms (Telegram, Discord). " +
-                    "Messages are signed with the username of the requesting user. " +
-                    "Rate limit: 100 messages per day (configurable per user).",
+            description = """
+                    Send a message to one or more platforms (Telegram, Discord).
+                    Messages are signed with the username of the requesting user.
+                    
+                    **Delivery Behavior:**
+                    - Message is always persisted in the database
+                    - Each platform delivery is attempted independently
+                    - A message is considered sent if at least one delivery succeeds
+                    - Failed deliveries include detailed error messages
+                    - Rate limit: 100 messages per day (configurable per user)
+                    """,
             security = @SecurityRequirement(name = "bearer-jwt")
     )
     @ApiResponses(value = {
@@ -52,20 +62,117 @@ public class MessageController {
                     description = "Message sent successfully (at least one delivery succeeded)",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = MessageResponse.class)
+                            schema = @Schema(implementation = MessageResponse.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "success",
+                                            summary = "All deliveries successful",
+                                            value = """
+                                                    {
+                                                      "id": 1,
+                                                      "content": "Hello from Notification Hub!",
+                                                      "username": "admin",
+                                                      "createdAt": "2025-10-27T10:49:28.5073736",
+                                                      "deliveries": [
+                                                        {
+                                                          "id": 1,
+                                                          "platform": "TELEGRAM",
+                                                          "destination": "123456789",
+                                                          "status": "SUCCESS",
+                                                          "providerResponse": {
+                                                            "message_id": 123
+                                                          },
+                                                          "sentAt": 2025-10-27T10:49:28.5073736"
+                                                        }
+                                                      ]
+                                                    }
+                                                    """
+                                    ),
+                                    @ExampleObject(
+                                            name = "partial_failure",
+                                            summary = "Some deliveries failed",
+                                            value = """
+                                                    {
+                                                      "id": 5,
+                                                      "content": "Deberia fallar test",
+                                                      "username": "testuser",
+                                                      "createdAt": "2025-10-27T10:49:28.5073736",
+                                                      "deliveries": [
+                                                        {
+                                                          "id": 6,
+                                                          "platform": "TELEGRAM",
+                                                          "destination": "123145",
+                                                          "status": "FAILED",
+                                                          "providerResponse": null,
+                                                          "errorMessage": "Exception: Failed to send message to Telegram: 400 Bad Request from POST https://api.telegram.org/bot8479729496:AAHPMD4UcPy3h5YMeXPL6gNlCpZGtDndLhw/sendMessage",
+                                                          "sentAt": "2025-10-27T10:49:28.5073736"
+                                                        }
+                                                      ]
+                                                    }
+                                                    """
+                                    )
+                            }
                     )
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Invalid request data or message content"
+                    description = "Invalid request data or message content",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(
+                                    value = """
+                                            {
+                                              "status": 400,
+                                              "error": "Validation Failed",
+                                              "message": "Invalid request data",
+                                              "timestamp": "2025-10-27T10:41:34.3468297",
+                                              "path": "/api/messages/send",
+                                              "details": [
+                                                "content: Message content is required"
+                                              ]
+                                            }
+                                            """
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "Not authenticated - JWT token required"
+                    description = "Not authenticated - JWT token required",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(
+                                    value = """
+                                            {
+                                              "status": 401,
+                                              "error": "Unauthorized",
+                                              "message": "Invalid or expired JWT token",
+                                              "timestamp": "2025-10-27T10:41:55.7123479",
+                                              "path": "/api/messages/send"
+                                            }
+                                            """
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "429",
-                    description = "Daily message limit exceeded"
+                    description = "Daily message limit exceeded",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(
+                                    value = """
+                                            {
+                                              "status": 429,
+                                              "error": "Too Many Requests",
+                                              "message": "Daily message limit exceeded. Remaining: 0",
+                                              "timestamp": "2025-10-27T10:41:55.7123479",
+                                              "path": "/api/messages/send"
+                                            }
+                                            """
+                            )
+                    )
             )
     })
     public ResponseEntity<MessageResponse> sendMessage(
@@ -103,11 +210,44 @@ public class MessageController {
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "Not authenticated - JWT token required"
+                    description = "Not authenticated - JWT token required",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(
+                                    value = """
+                                            {
+                                              "status": 401,
+                                              "error": "Unauthorized",
+                                              "message": "Invalid or expired JWT token",
+                                              "timestamp": "2025-10-27T10:41:55.7123479",
+                                              "path": "/api/messages"
+                                            }
+                                            """
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Invalid filter parameters"
+                    description = "Invalid filter parameters",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(
+                                    value = """
+                                            {
+                                              "status": 400,
+                                              "error": "Bad Request",
+                                              "message": "Invalid date format for parameter 'from'",
+                                              "timestamp": "2025-10-27T10:41:34.3468297",
+                                              "path": "/api/messages",
+                                              "details": [
+                                                "from: must be a valid ISO 8601 date time"
+                                              ]
+                                            }
+                                            """
+                            )
+                    )
             )
     })
     public ResponseEntity<List<MessageResponse>> getMyMessages(
