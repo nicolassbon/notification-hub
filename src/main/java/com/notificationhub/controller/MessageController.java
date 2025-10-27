@@ -104,7 +104,7 @@ public class MessageController {
                                                           "destination": "123145",
                                                           "status": "FAILED",
                                                           "providerResponse": null,
-                                                          "errorMessage": "Exception: Failed to send message to Telegram: 400 Bad Request from POST https://api.telegram.org/bot8479729496:AAHPMD4UcPy3h5YMeXPL6gNlCpZGtDndLhw/sendMessage",
+                                                          "errorMessage": "Exception: Failed to send message to Telegram: 400 Bad Request from POST https://api.telegram.org/bot:1231414514/sendMessage",
                                                           "sentAt": "2025-10-27T10:49:28.5073736"
                                                         }
                                                       ]
