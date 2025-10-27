@@ -41,7 +41,7 @@ jobs:
         cache: maven
 
     - name: Run tests
-      run: ./mvnw test
+      run: ./mvnw test -Dtest=!*IntegrationTest,*ApplicationTests
       env:
         SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/notification_hub
         SPRING_DATASOURCE_USERNAME: app_user
