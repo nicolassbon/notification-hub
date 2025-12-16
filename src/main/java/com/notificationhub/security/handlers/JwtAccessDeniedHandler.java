@@ -38,7 +38,6 @@ public class JwtAccessDeniedHandler implements AccessDeniedHandler {
                 .error("Forbidden")
                 .message("Access denied: insufficient permissions")
                 .timestamp(LocalDateTime.now())
-                .path(request.getRequestURI())
                 .build();
 
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);

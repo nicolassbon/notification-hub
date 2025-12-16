@@ -19,30 +19,18 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
 
-    private ErrorResponse buildErrorResponse(HttpStatus status, String error, String message, HttpServletRequest request) {
+    private ErrorResponse buildErrorResponse(HttpStatus status, String error, String message, HttpServletRequest request, List<String> details) {
         return ErrorResponse.builder()
                 .status(status.value())
                 .error(error)
                 .message(message)
-                .timestamp(LocalDateTime.now())
-                .path(request.getRequestURI())
-                .build();
-    }
-
-    private ErrorResponse buildErrorResponse(List<String> details, HttpServletRequest request) {
-        return ErrorResponse.builder()
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error("Validation Failed")
-                .message("Invalid request data")
                 .details(details)
                 .timestamp(LocalDateTime.now())
-                .path(request.getRequestURI())
                 .build();
     }
 
@@ -52,14 +40,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleRateLimitExceeded(
             RateLimitExceededException ex, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-                .body(buildErrorResponse(HttpStatus.TOO_MANY_REQUESTS, "Rate Limit Exceeded", ex.getMessage(), request));
+                .body(buildErrorResponse(HttpStatus.TOO_MANY_REQUESTS, "Rate Limit Exceeded", ex.getMessage(), request, null));
     }
 
     @ExceptionHandler({MessageDeliveryException.class, IllegalArgumentException.class})
     public ResponseEntity<ErrorResponse> handleBadRequestExceptions(
             Exception ex, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(buildErrorResponse(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage(), request));
+                .body(buildErrorResponse(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage(), request, null));
     }
 
     @ExceptionHandler({MethodArgumentTypeMismatchException.class, ConversionFailedException.class, DateTimeParseException.class})
@@ -69,14 +57,14 @@ public class GlobalExceptionHandler {
             message = "Invalid date/time format";
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(buildErrorResponse(HttpStatus.BAD_REQUEST, "Bad Request", message, request));
+                .body(buildErrorResponse(HttpStatus.BAD_REQUEST, "Bad Request", message, request, null));
     }
 
     @ExceptionHandler({InvalidCredentialsException.class})
     public ResponseEntity<ErrorResponse> handleInvalidCredentials(
             InvalidCredentialsException ex, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(buildErrorResponse(HttpStatus.UNAUTHORIZED, "Unauthorized", ex.getMessage(), request));
+                .body(buildErrorResponse(HttpStatus.UNAUTHORIZED, "Unauthorized", ex.getMessage(), request, null));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -85,11 +73,16 @@ public class GlobalExceptionHandler {
 
         List<String> details = ex.getBindingResult().getFieldErrors().stream()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                .collect(Collectors.toList());
+                .toList();
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(buildErrorResponse(
-                        details, request));
+                        HttpStatus.BAD_REQUEST,
+                        "Validation Failed",
+                        "Invalid request data",
+                        request,
+                        details)
+                );
     }
 
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
@@ -97,7 +90,7 @@ public class GlobalExceptionHandler {
             HttpMediaTypeNotSupportedException ex, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
                 .body(buildErrorResponse(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Unsupported Media Type",
-                        "Content type not supported: " + ex.getContentType(), request));
+                        "Content type not supported: " + ex.getContentType(), request, null));
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
@@ -105,7 +98,7 @@ public class GlobalExceptionHandler {
             HttpRequestMethodNotSupportedException ex, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
                 .body(buildErrorResponse(HttpStatus.METHOD_NOT_ALLOWED, "Method Not Allowed",
-                        "Method '" + ex.getMethod() + "' not supported for this endpoint", request));
+                        "Method '" + ex.getMethod() + "' not supported for this endpoint", request, null));
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
@@ -113,7 +106,7 @@ public class GlobalExceptionHandler {
             HttpMessageNotReadableException ex, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(buildErrorResponse(HttpStatus.BAD_REQUEST, "Bad Request",
-                        "Malformed JSON request", request));
+                        "Malformed JSON request", request, null));
     }
 
     // ========== 5xx SERVER ERRORS ==========
@@ -123,6 +116,6 @@ public class GlobalExceptionHandler {
             Exception ex, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error",
-                        "An unexpected error occurred", request));
+                        "An unexpected error occurred", request, null));
     }
 }

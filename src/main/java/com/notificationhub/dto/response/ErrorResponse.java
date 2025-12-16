@@ -28,9 +28,6 @@ public class ErrorResponse {
     @Schema(description = "Error timestamp", example = "2025-01-15T10:30:00")
     private LocalDateTime timestamp;
 
-    @Schema(description = "Request path", example = "/api/auth/register")
-    private String path;
-
     // Solo incluir detalles si no es nulo
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @Schema(description = "Additional error details", example = "[\"Username must be at least 3 characters\"]")

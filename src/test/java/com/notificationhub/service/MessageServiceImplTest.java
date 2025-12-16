@@ -9,6 +9,7 @@ import com.notificationhub.enums.PlatformType;
 import com.notificationhub.enums.Role;
 import com.notificationhub.exception.custom.RateLimitExceededException;
 import com.notificationhub.repository.DailyMessageCountRepository;
+import com.notificationhub.repository.MessageDeliveryRepository;
 import com.notificationhub.repository.MessageRepository;
 import com.notificationhub.repository.UserRepository;
 import com.notificationhub.service.impl.MessageServiceImpl;
@@ -38,6 +39,9 @@ public class MessageServiceImplTest {
 
     @Mock
     private MessageRepository messageRepository;
+
+    @Mock
+    private MessageDeliveryRepository messageDeliveryRepository;
 
     @Mock
     private PlatformServiceFactory platformServiceFactory;
@@ -72,7 +76,8 @@ public class MessageServiceImplTest {
                 userRepository,
                 dailyMessageCountRepository,
                 rateLimitService,
-                securityUtils
+                securityUtils,
+                messageDeliveryRepository
         );
 
         testUser = User.builder()

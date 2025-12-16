@@ -127,7 +127,6 @@ public class MessageController {
                                               "error": "Validation Failed",
                                               "message": "Invalid request data",
                                               "timestamp": "2025-10-27T10:41:34.3468297",
-                                              "path": "/api/messages/send",
                                               "details": [
                                                 "content: Message content is required"
                                               ]
@@ -148,8 +147,7 @@ public class MessageController {
                                               "status": 401,
                                               "error": "Unauthorized",
                                               "message": "Invalid or expired JWT token",
-                                              "timestamp": "2025-10-27T10:41:55.7123479",
-                                              "path": "/api/messages/send"
+                                              "timestamp": "2025-10-27T10:41:55.7123479"
                                             }
                                             """
                             )
@@ -167,8 +165,7 @@ public class MessageController {
                                               "status": 429,
                                               "error": "Too Many Requests",
                                               "message": "Daily message limit exceeded. Remaining: 0",
-                                              "timestamp": "2025-10-27T10:41:55.7123479",
-                                              "path": "/api/messages/send"
+                                              "timestamp": "2025-10-27T10:41:55.7123479"
                                             }
                                             """
                             )
@@ -220,8 +217,7 @@ public class MessageController {
                                               "status": 401,
                                               "error": "Unauthorized",
                                               "message": "Invalid or expired JWT token",
-                                              "timestamp": "2025-10-27T10:41:55.7123479",
-                                              "path": "/api/messages"
+                                              "timestamp": "2025-10-27T10:41:55.7123479"
                                             }
                                             """
                             )
@@ -240,7 +236,6 @@ public class MessageController {
                                               "error": "Bad Request",
                                               "message": "Invalid date format for parameter 'from'",
                                               "timestamp": "2025-10-27T10:41:34.3468297",
-                                              "path": "/api/messages",
                                               "details": [
                                                 "from: must be a valid ISO 8601 date time"
                                               ]

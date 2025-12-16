@@ -11,6 +11,7 @@ import com.notificationhub.entity.User;
 import com.notificationhub.enums.DeliveryStatus;
 import com.notificationhub.enums.PlatformType;
 import com.notificationhub.repository.DailyMessageCountRepository;
+import com.notificationhub.repository.MessageDeliveryRepository;
 import com.notificationhub.repository.MessageRepository;
 import com.notificationhub.repository.UserRepository;
 import com.notificationhub.service.MessageService;
@@ -39,19 +40,22 @@ public class MessageServiceImpl implements MessageService {
     private final DailyMessageCountRepository dailyMessageCountRepository;
     private final RateLimitService rateLimitService;
     private final SecurityUtils securityUtils;
+    private final MessageDeliveryRepository messageDeliveryRepository;
 
     public MessageServiceImpl(MessageRepository messageRepository,
                               PlatformServiceFactory platformServiceFactory,
                               UserRepository userRepository,
                               DailyMessageCountRepository dailyMessageCountRepository,
                               RateLimitService rateLimitService,
-                              SecurityUtils securityUtils) {
+                              SecurityUtils securityUtils,
+                              MessageDeliveryRepository messageDeliveryRepository) {
         this.messageRepository = messageRepository;
         this.platformServiceFactory = platformServiceFactory;
         this.userRepository = userRepository;
         this.dailyMessageCountRepository = dailyMessageCountRepository;
         this.rateLimitService = rateLimitService;
         this.securityUtils = securityUtils;
+        this.messageDeliveryRepository = messageDeliveryRepository;
     }
 
     public Message sendMessage(MessageRequest request) {
@@ -101,6 +105,7 @@ public class MessageServiceImpl implements MessageService {
         User currentUser = getAuthenticatedUser();
 
         MessageFilterCriteria criteria = MessageFilterCriteria.builder()
+                .user(currentUser)
                 .status(status)
                 .platform(platform)
                 .from(from)
@@ -108,7 +113,7 @@ public class MessageServiceImpl implements MessageService {
                 .build();
 
         List<Message> messages = retrieveUserMessages(currentUser, criteria);
-        List<Message> filteredMessages = applyFilters(messages, criteria);
+        List<Message> filteredMessages = messageDeliveryRepository.findMessagesByFilters(criteria);
 
         log.info("Retrieved {} filtered messages for user {}", filteredMessages.size(), currentUser.getUsername());
         return filteredMessages;
@@ -218,30 +223,4 @@ public class MessageServiceImpl implements MessageService {
             return messageRepository.findByUserOrderByCreatedAtDesc(user);
         }
     }
-
-    private List<Message> applyFilters(List<Message> messages, MessageFilterCriteria criteria) {
-        if (!criteria.hasFilters()) {
-            return messages;
-        }
-
-        return messages.stream()
-                .filter(message -> matchesStatus(message, criteria.status()))
-                .filter(message -> matchesPlatform(message, criteria.platform()))
-                .toList();
-    }
-
-    private boolean matchesStatus(Message message, DeliveryStatus status) {
-        if (status == null) return true;
-
-        return message.getDeliveries().stream()
-                .anyMatch(d -> d.getStatus() == status);
-    }
-
-    private boolean matchesPlatform(Message message, PlatformType platform) {
-        if (platform == null) return true;
-
-        return message.getDeliveries().stream()
-                .anyMatch(d -> d.getPlatformType() == platform);
-    }
-
 }

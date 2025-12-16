@@ -64,8 +64,7 @@ public class AdminController {
                                               "status": 401,
                                               "error": "Unauthorized",
                                               "message": "Invalid or expired JWT token",
-                                              "timestamp": "2025-10-27T11:02:15.6462631",
-                                              "path": "/api/admin/messages"
+                                              "timestamp": "2025-10-27T11:02:15.6462631"
                                             }
                                             """
                             )
@@ -83,8 +82,7 @@ public class AdminController {
                                               "status": 403,
                                               "error": "Forbidden",
                                               "message": "Access denied: insufficient permissions",
-                                              "timestamp": "2025-10-27T11:05:19.0751069",
-                                              "path": "/api/admin/messages"
+                                              "timestamp": "2025-10-27T11:05:19.0751069"
                                             }
                                             """
                             )
@@ -124,8 +122,7 @@ public class AdminController {
                                               "status": 401,
                                               "error": "Unauthorized",
                                               "message": "Invalid or expired JWT token",
-                                              "timestamp": "2025-10-27T11:02:15.6462631",
-                                              "path": "/api/admin/metrics"
+                                              "timestamp": "2025-10-27T11:02:15.6462631"
                                             }
                                             """
                             )
@@ -143,8 +140,7 @@ public class AdminController {
                                               "status": 403,
                                               "error": "Forbidden",
                                               "message": "Access denied: insufficient permissions",
-                                              "timestamp": "2025-10-27T11:05:19.0751069",
-                                              "path": "/api/admin/metrics"
+                                              "timestamp": "2025-10-27T11:05:19.0751069"
                                             }
                                             """
                             )

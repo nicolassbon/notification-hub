@@ -43,7 +43,6 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
                     .error("Unauthorized")
                     .message("Invalid or expired JWT token")
                     .timestamp(LocalDateTime.now())
-                    .path(request.getRequestURI())
                     .build();
         } else {
             errorResponse = ErrorResponse.builder()
@@ -51,7 +50,6 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
                     .error("Unauthorized")
                     .message("Authentication required")
                     .timestamp(LocalDateTime.now())
-                    .path(request.getRequestURI())
                     .build();
         }
 
