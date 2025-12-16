@@ -299,7 +299,6 @@ La API devuelve respuestas de error consistentes:
   "error": "Bad Request",
   "message": "Descripción del error",
   "timestamp": "2025-10-27T10:30:00",
-  "path": "/api/messages/send",
   "details": [
     "content: no debe estar en blanco",
     "destinations: debe tener al menos un elemento"
