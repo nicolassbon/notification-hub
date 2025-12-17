@@ -10,10 +10,11 @@ Notification Hub es una API REST que centraliza el envío de notificaciones a m�
 
 - **Autenticación JWT**: Sistema seguro de autenticación con tokens que expiran en 24 horas
 - **Multi-plataforma**: Soporte para Telegram y Discord con posibilidad de extensión a otras plataformas
-- **Rate Limiting**: Control de límite diario de mensajes por usuario (configurable, por defecto 100/día)
+- **Rate Limiting**: Control de límite diario de mensajes por usuario (configurable, por defecto 100/día) con protección contra race conditions
 - **Gestión de Entregas**: Seguimiento detallado del estado de cada entrega (SUCCESS, PENDING, FAILED)
 - **Roles de Usuario**: Sistema de roles (USER, ADMIN) con endpoints administrativos
 - **Filtrado Avanzado**: Búsqueda de mensajes por estado, plataforma y rango de fechas
+- **Optimización N+1**: Solución al problema N+1 query mediante `JOIN FETCH` para carga eficiente de relaciones
 - **Documentación Swagger**: API completamente documentada con OpenAPI 3.0
 - **Persistencia**: Base de datos MySQL/PostgreSQL con JPA/Hibernate
 - **Testing**: Suite completa de tests unitarios e integración
@@ -259,6 +260,43 @@ Configurar las siguientes variables en el dashboard de Render:
 - **Encriptación**: Contraseñas hasheadas con BCrypt
 - **HTTPS**: Configurado para usar HTTPS en producción
 
+## ⚡ Optimizaciones de Rendimiento
+
+### Solución al Problema N+1 Query
+
+El proyecto implementa `JOIN FETCH` en consultas JPA para evitar el problema N+1 al cargar relaciones:
+
+**Problema:** Sin optimización, al cargar 100 mensajes con sus entregas (deliveries), se ejecutaban **101 queries** (1 para mensajes + 100 para cada delivery).
+
+**Solución implementada:**
+
+- Uso de consultas JPQL personalizadas con cláusula `JOIN FETCH`
+- Carga eager optimizada de las relaciones entre mensajes y entregas
+- Ordenamiento directo en la consulta para evitar queries adicionales
+
+**Resultado:** Ahora se ejecuta **1 sola query** con `LEFT JOIN`, mejorando el rendimiento significativamente.
+
+### Protección contra Race Conditions en Rate Limiting
+
+Implementación de bloqueo pesimista y operaciones atómicas para evitar condiciones de carrera en el contador de mensajes diarios:
+
+**Problema:** En escenarios concurrentes (múltiples requests simultáneos), el contador podría incrementarse incorrectamente permitiendo superar el límite diario.
+
+**Solución implementada:**
+
+- **Bloqueo pesimista (PESSIMISTIC_WRITE):** Garantiza que solo un thread pueda leer y modificar el contador a la vez
+- **Operaciones atómicas:** Actualización del contador mediante queries nativas que incrementan el valor directamente en la base de datos
+- **Transacciones aisladas:** Uso de anotaciones transaccionales para asegurar la consistencia de datos
+- **Validación doble:** Verificación del límite antes y después de incrementar el contador
+
+**Beneficios:**
+
+- ✅ Garantiza consistencia del contador en ambiente multi-thread
+- ✅ Previene que usuarios excedan su límite diario en requests concurrentes
+- ✅ Transacciones ACID completas
+
+**Testing:** Ambas optimizaciones están cubiertas por tests unitarios que validan el comportamiento en escenarios concurrentes y de carga normal.
+
 ## 📊 Límites y Restricciones
 
 - **Longitud máxima del mensaje**: 4000 caracteres
@@ -312,12 +350,14 @@ La API devuelve respuestas de error consistentes:
 
 - Sistema de autenticación JWT
 - Envío a Telegram y Discord
-- Rate limiting por usuario
+- Rate limiting por usuario con protección contra race conditions
 - Filtrado avanzado de mensajes
 - Panel administrativo
 - Documentación Swagger completa
 - Suite de tests completa
 - Configuración para deployment en producción
+- Optimización de queries (solución al problema N+1)
+- Operaciones atómicas y bloqueos transaccionales
 
 ## 💡 Posibles Mejoras Futuras
 

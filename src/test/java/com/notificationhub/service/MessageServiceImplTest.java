@@ -235,12 +235,12 @@ public class MessageServiceImplTest {
                 Message.builder().id(1L).content("Message 1").build(),
                 Message.builder().id(2L).content("Message 2").build()
         );
-        when(messageRepository.findAll()).thenReturn(expectedMessages);
+        when(messageRepository.findAllWithDeliveries()).thenReturn(expectedMessages);
 
         List<Message> result = messageService.getAllMessages();
 
         assertEquals(2, result.size());
-        verify(messageRepository).findAll();
+        verify(messageRepository).findAllWithDeliveries();
     }
 
     @Test
@@ -250,7 +250,7 @@ public class MessageServiceImplTest {
 
         assertThrows(IllegalStateException.class, () -> messageService.getAllMessages());
 
-        verify(messageRepository, never()).findAll();
+        verify(messageRepository, never()).findAllWithDeliveries();
     }
 
     @Test
