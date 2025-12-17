@@ -1,160 +1,3 @@
-Roadmap de Mejoras Pre-Frontend - Notification Hub 🎯
- 
-🔴 BUGS CRÍTICOS - ARREGLAR ANTES QUE NADA
-
-1. Race Condition en Rate Limiting
-Archivo: RateLimitService.java
-Problema: Dos usuarios pueden enviar mensajes simultáneamente y ambos incrementar el contador, superando el límite
-Solución: Implementar lock optimista con @Version en la entidad DailyMessageCount O usar una query SQL atómica que incremente directamente en base de datos
-Impacto: Alta - Los usuarios pueden hacer spam
-
-2. Fallo de Transaccionalidad en Envío de Mensajes
-Archivo: MessageServiceImpl.java - método sendMessage()
-Problema: Si todas las plataformas fallan, el mensaje queda guardado y cuenta en el límite diario aunque nunca se envió nada
-Solución: Verificar que al menos UNA plataforma tuvo éxito antes de commitear la transacción, sino hacer rollback completo
-Impacto: Alta - Los usuarios pierden cuota de mensajes sin recibir nada
-
-3. N+1 Query Problem
-Archivo: MessageRepository.java y MessageServiceImpl.java
-Problema: Al buscar mensajes con findAll(), cada mensaje dispara una query adicional para cargar sus deliveries (entregas)
-Solución: Agregar @EntityGraph o JOIN FETCH en el repository para cargar deliveries de una sola vez
-Impacto: Media-Alta - Con 100 mensajes = 101 queries a BD
-
-4. Rate Limit Check Después del Save
-Archivo: MessageServiceImpl.java - método sendMessage()
-Problema: Se incrementa el rate limit ANTES de verificar si el mensaje se pudo enviar
-Solución: Primero intentar enviar, LUEGO incrementar solo si hubo éxito
-Impacto: Media - Los fallos cuentan como mensajes enviados
- 
-🟡 MEJORAS DE ARQUITECTURA - REFACTORING IMPORTANTE
-
-5. Separar Responsabilidades en MessageService
-Archivos: MessageServiceImpl.java (crear 3 nuevos servicios)
-Problema: MessageServiceImpl hace TODO: persiste, envía, valida, filtra (viola Single Responsibility Principle)
-Solución:
-Crear MessageOrchestratorService (coordina el flujo)
-Crear MessagePersistenceService (solo CRUD)
-Crear NotificationDispatcher (solo envío a plataformas)
-Crear MessageFilterService (solo lógica de filtros)
-Impacto: Baja en funcionalidad, Alta en mantenibilidad
-
-6. Circuit Breaker para Plataformas Externas
-Archivos: TelegramServiceImpl.java y DiscordServiceImpl.java
-Problema: Si Telegram/Discord caen, cada request espera timeout (lento y consume recursos)
-Solución: Agregar dependencia resilience4j-spring-boot3 y decorar métodos send() con @CircuitBreaker y @Retry
-Configuración: Archivo application.yml con sliding window de 10 requests, umbral de fallo 50%, espera de 60s
-Impacto: Alta - Mejora resiliencia y UX
-
-7. Implementar Caché Inteligente
-Archivos: MessageServiceImpl.java, crear CacheConfig.java
-Problema: Cada vez que el usuario lista sus mensajes, se consulta BD
-Solución:
-Agregar @EnableCaching en configuración
-Usar Caffeine como provider (en memoria)
-Decorar getMyMessages() con @Cacheable
-Invalidar con @CacheEvict al enviar nuevo mensaje
-Impacto: Media - Reduce carga en BD hasta 80%
-
-8. Auditoría Automática con Spring Data
-Archivos: Todas las entidades (Message.java, User.java, etc.) y crear JpaAuditConfig.java
-Problema: No hay trazabilidad de quién creó/modificó qué y cuándo
-Solución:
-Agregar @CreatedDate, @LastModifiedDate, @CreatedBy, @LastModifiedBy a entidades
-Configurar @EnableJpaAuditing con AuditorAware que obtenga usuario del SecurityContext
-Impacto: Baja - Pero crítica para compliance
- 
-🟢 FUNCIONALIDADES CLAVE PARA EL FRONTEND
-
-9. Sistema de Plantillas de Mensajes
-Crear: MessageTemplate.java (entidad), MessageTemplateRepository.java, TemplateService.java, TemplateController.java
-Funcionalidad: Usuario guarda plantillas con placeholders tipo {username}, {fecha}, etc.
-Endpoints:
-POST /api/templates - Crear plantilla
-GET /api/templates - Listar mis plantillas
-POST /api/messages/send-from-template - Enviar usando plantilla + variables
-Impacto: Alta - Feature killer para UI
-
-10. Mensajes Programados (Scheduled Messages)
-Crear: ScheduledMessage.java (entidad), ScheduledMessageRepository.java, ScheduledMessageService.java con @Scheduled
-Funcionalidad: Usuario programa mensajes para enviarse en fecha/hora específica
-Endpoints:
-POST /api/scheduled-messages - Programar mensaje
-GET /api/scheduled-messages - Ver mis mensajes pendientes
-DELETE /api/scheduled-messages/{id} - Cancelar programado
-Cron Job: Revisar cada minuto mensajes pendientes y enviar los que llegaron a su hora
-Impacto: Alta - Diferenciador clave
-
-11. Dashboard de Estadísticas
-Crear: DashboardController.java, DashboardService.java
-Funcionalidad: Endpoint que devuelve stats para el frontend
-Endpoint: GET /api/dashboard/stats
-Retorna:
-Total mensajes enviados
-Mensajes por plataforma (Telegram vs Discord)
-Tasa de éxito/fallo
-Mensajes enviados hoy
-Cuota restante del día
-Gráfica últimos 7 días
-Impacto: Alta - Core del frontend
-
-12. Webhooks para Integraciones Externas
-Crear: WebhookSubscription.java (entidad), WebhookService.java, WebhookController.java
-Funcionalidad: Usuario registra una URL webhook para recibir notificaciones cuando ocurren eventos
-Eventos: MESSAGE_SENT, MESSAGE_FAILED, RATE_LIMIT_REACHED
-Seguridad: Firmar payloads con HMAC usando un secreto compartido
-Endpoints:
-POST /api/webhooks - Registrar webhook
-GET /api/webhooks - Listar mis webhooks
-DELETE /api/webhooks/{id} - Eliminar webhook
-Impacto: Media - Para usuarios avanzados
-
-13. Búsqueda Full-Text en Mensajes
-Modificar: MessageRepository.java, agregar índice FULLTEXT en Message.content
-Funcionalidad: Buscar mensajes por palabras clave en el contenido
-Endpoint: GET /api/messages/search?q=palabra
-Implementación: Query nativa MySQL con MATCH() AGAINST() en modo natural language
-Impacto: Media - Mejora UX significativamente
-
-14. Métricas Detalladas con Micrometer
-Modificar: Todos los servicios, agregar dependencia micrometer-registry-prometheus
-Funcionalidad: Exponer métricas técnicas para monitoreo
-Métricas custom:
-Counter de mensajes enviados por plataforma
-Timer de duración de envío
-Gauge de usuarios activos
-Gauge de rate limit promedio
-Endpoint: GET /actuator/prometheus (auto-generado)
-Impacto: Baja para usuarios, Alta para ops
-
-15. Envío Masivo Asíncrono (Batch)
-Crear: BatchController.java, modificar MessageServiceImpl.java
-Funcionalidad: Enviar múltiples mensajes en un solo request, procesados en background
-Endpoints:
-POST /api/messages/send-batch - Enviar lista de mensajes, retorna batchId
-GET /api/messages/batch-status/{batchId} - Consultar progreso
-Implementación: Usar CompletableFuture.runAsync() o @Async
-Impacto: Media - Para power users
-
-16. Rate Limiting Avanzado con Bucket4j
-Reemplazar: RateLimitService.java completo
-Funcionalidad: Cambiar de contador diario simple a token bucket con refill
-Beneficio:
-Más granular (por minuto/hora en vez de solo día)
-Respuestas HTTP con headers X-RateLimit-Remaining, X-RateLimit-Reset
-Diferentes límites por rol (ADMIN sin límite, USER 100/día)
-Impacto: Media - Mejora UX con feedback visual
-
-17. Soporte para Archivos Adjuntos
-Modificar: MessageController.java, TelegramServiceImpl.java, DiscordServiceImpl.java
-Funcionalidad: Enviar mensajes con imágenes/documentos adjuntos
-Endpoint: POST /api/messages/send-with-file (multipart/form-data)
-Validaciones:
-Tamaño máximo 10MB
-Tipos permitidos: image/*, application/pdf
-Storage: Guardar en sistema de archivos local o S3
-Implementación: Telegram y Discord tienen APIs nativas para enviar archivos
-Impacto: Alta - Feature muy solicitado
- 
 📊 PRIORIZACIÓN RECOMENDADA
 
 🔥 Semana 1 - Arreglar Fundamentos
@@ -187,7 +30,6 @@ Preparar deployment con nuevas variables de entorno
  
 💡 CONSIDERACIONES TÉCNICAS IMPORTANTES
 Para el Frontend
-Los endpoints de dashboard deben retornar JSON con estructura clara (no solo entidades crudas)
 Implementar CORS correctamente para permitir localhost:3000 en desarrollo
 Considerar WebSockets para notificaciones en tiempo real (opcional, alta complejidad)
 Todos los endpoints deben devolver DTOs, nunca entidades directamente
@@ -197,7 +39,6 @@ Validar TODOS los inputs con Bean Validation (@Valid)
 Sanitizar contenido de mensajes para prevenir XSS si el frontend renderiza HTML
 Rotar JWT_SECRET periódicamente en producción
 Performance
-Implementar paginación en TODOS los endpoints que retornan listas (Pageable)
 Usar proyecciones JPA para queries de solo lectura (evitar cargar entidades completas)
 Configurar pool de conexiones adecuado en application.yml (HikariCP)
 Considerar Redis para caché distribuida si escala más allá de un servidor

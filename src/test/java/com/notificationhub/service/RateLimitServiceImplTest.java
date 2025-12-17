@@ -103,24 +103,25 @@ public class RateLimitServiceImplTest {
     }
 
     @Test
-    @DisplayName("Should increment existing counter")
+    @DisplayName("Should increment existing counter atomically")
     void incrementCounterExistingCounterIncrementsCount() {
         LocalDate today = LocalDate.now();
-        DailyMessageCount count = DailyMessageCount.builder()
-                .user(testUser)
-                .date(today)
-                .count(5)
-                .build();
 
-        when(dailyMessageCountRepository.findByUserAndDate(testUser, today))
-                .thenReturn(Optional.of(count));
-        when(dailyMessageCountRepository.save(count))
-                .thenReturn(count);
+        when(dailyMessageCountRepository.incrementCountAtomic(testUser, today))
+                .thenReturn(0)
+                .thenReturn(1);
+
+        when(dailyMessageCountRepository.save(any(DailyMessageCount.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         rateLimitService.incrementCounter(testUser);
 
-        assertEquals(6, count.getCount());
-        verify(dailyMessageCountRepository).save(count);
+        verify(dailyMessageCountRepository, times(2)).incrementCountAtomic(testUser, today);
+        verify(dailyMessageCountRepository).save(argThat(counter ->
+                counter.getUser().equals(testUser) &&
+                        counter.getDate().equals(today) &&
+                        counter.getCount() == 0
+        ));
     }
 
     @Test
@@ -128,8 +129,8 @@ public class RateLimitServiceImplTest {
     void incrementCounterNoCounterCreatesAndIncrements() {
         LocalDate today = LocalDate.now();
 
-        when(dailyMessageCountRepository.findByUserAndDate(testUser, today))
-                .thenReturn(Optional.empty());
+        when(dailyMessageCountRepository.incrementCountAtomic(testUser, today))
+                .thenReturn(0);
 
         DailyMessageCount savedCounter = DailyMessageCount.builder()
                 .user(testUser)
@@ -142,7 +143,8 @@ public class RateLimitServiceImplTest {
 
         rateLimitService.incrementCounter(testUser);
 
-        verify(dailyMessageCountRepository, times(2)).save(any(DailyMessageCount.class));
+        verify(dailyMessageCountRepository, times(2)).incrementCountAtomic(testUser, today);
+        verify(dailyMessageCountRepository).save(any(DailyMessageCount.class));
         verify(dailyMessageCountRepository).save(argThat(counter ->
                 counter.getCount() == 0
         ));

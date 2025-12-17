@@ -41,15 +41,14 @@ public class RateLimitServiceImpl implements RateLimitService {
     public void incrementCounter(User user) {
         LocalDate today = LocalDate.now();
 
-        DailyMessageCount count = dailyMessageCountRepository
-                .findByUserAndDate(user, today)
-                .orElseGet(() -> createNewCounter(user, today));
+        int rowsUpdated = dailyMessageCountRepository.incrementCountAtomic(user, today);
 
-        count.increment();
-        dailyMessageCountRepository.save(count);
+        if (rowsUpdated == 0) {
+            createNewCounter(user, today);
+            dailyMessageCountRepository.incrementCountAtomic(user, today);
+        }
 
-        log.info("Incremented message counter for user {}. New count: {}/{}",
-                user.getUsername(), count.getCount(), user.getDailyMessageLimit());
+        log.info("Incremented message counter for user {} atomically", user.getUsername());
     }
 
     public int getRemainingMessages(User user) {
