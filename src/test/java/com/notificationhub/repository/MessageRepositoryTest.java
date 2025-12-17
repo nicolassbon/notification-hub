@@ -1,7 +1,10 @@
 package com.notificationhub.repository;
 
 import com.notificationhub.entity.Message;
+import com.notificationhub.entity.MessageDelivery;
 import com.notificationhub.entity.User;
+import com.notificationhub.enums.DeliveryStatus;
+import com.notificationhub.enums.PlatformType;
 import com.notificationhub.enums.Role;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -179,4 +182,40 @@ class MessageRepositoryTest {
         assertTrue(messages.stream().allMatch(msg -> msg.getUser().equals(testUser)));
         assertFalse(messages.stream().anyMatch(msg -> msg.getUser().equals(anotherUser)));
     }
+
+    @Test
+    @DisplayName("Should load deliveries with single query (not N+1)")
+    void findByUserWithJoinFecthAvoidNPlusOneProblem() {
+        for (int i = 0; i < 5; i++) {
+            Message msg = Message.builder()
+                    .user(testUser)
+                    .content("Message " + i)
+                    .createdAt(LocalDateTime.now().minusHours(i))
+                    .build();
+
+            msg.addDelivery(MessageDelivery.builder()
+                    .platformType(PlatformType.TELEGRAM)
+                    .destination("dest" + i)
+                    .status(DeliveryStatus.SUCCESS)
+                    .build()
+            );
+
+            entityManager.persist(msg);
+        }
+
+        entityManager.flush();
+        entityManager.clear();
+
+        List<Message> messages = messageRepository.findByUserOrderByCreatedAtDesc(testUser);
+
+        assertNotNull(messages);
+        assertEquals(8, messages.size());
+
+        long messagesWithDeliveries = messages.stream()
+                .filter(msg -> !msg.getDeliveries().isEmpty())
+                .count();
+
+        assertEquals(5, messagesWithDeliveries, "Should have 5 messages with deliveries");
+    }
+
 }

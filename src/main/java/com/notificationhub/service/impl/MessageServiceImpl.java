@@ -89,7 +89,7 @@ public class MessageServiceImpl implements MessageService {
             throw new IllegalStateException("Only admins can view all messages");
         }
 
-        List<Message> messages = messageRepository.findAll();
+        List<Message> messages = messageRepository.findAllWithDeliveries();
 
         log.info("Admin retrieved {} messages", messages.size());
 
