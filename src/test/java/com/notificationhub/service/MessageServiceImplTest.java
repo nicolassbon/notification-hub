@@ -7,6 +7,7 @@ import com.notificationhub.entity.*;
 import com.notificationhub.enums.DeliveryStatus;
 import com.notificationhub.enums.PlatformType;
 import com.notificationhub.enums.Role;
+import com.notificationhub.exception.custom.MessageDeliveryException;
 import com.notificationhub.exception.custom.RateLimitExceededException;
 import com.notificationhub.repository.DailyMessageCountRepository;
 import com.notificationhub.repository.MessageDeliveryRepository;
@@ -174,33 +175,24 @@ public class MessageServiceImplTest {
     }
 
     @Test
-    @DisplayName("Should not increment rate limit when all deliveries fail")
-    void sendMessageAllDeliveriesFailNoRateLimitIncrement() {
+    @DisplayName("Should not increment rate limit and throws exception when all deliveries fail")
+    void sendMessageAllDeliveriesFailThrowsException() {
         when(securityUtils.getCurrentUser()).thenReturn(testUser);
         when(platformServiceFactory.getService(PlatformType.DISCORD)).thenReturn(discordService);
         when(platformServiceFactory.getService(PlatformType.TELEGRAM)).thenReturn(telegramService);
 
-        when(discordService.send(any(), any(), any())).thenThrow(new RuntimeException("Discord failed"));
-        when(telegramService.send(any(), any(), any())).thenThrow(new RuntimeException("Telegram failed"));
+        when(discordService.send(any(), any(), any())).thenThrow(new RuntimeException("Discord API down"));
+        when(telegramService.send(any(), any(), any())).thenThrow(new RuntimeException("Telegram rate limited"));
 
-        Message savedMessage = Message.builder()
-                .id(1L)
-                .user(testUser)
-                .content("Test message content")
-                .deliveries(Arrays.asList(
-                        MessageDelivery.builder().platformType(PlatformType.DISCORD).status(DeliveryStatus.FAILED).build(),
-                        MessageDelivery.builder().platformType(PlatformType.TELEGRAM).status(DeliveryStatus.FAILED).build()
-                ))
-                .build();
+        MessageDeliveryException exception = assertThrows(MessageDeliveryException.class,
+                () -> messageService.sendMessage(validMessageRequest));
 
-        when(messageRepository.save(any(Message.class))).thenReturn(savedMessage);
-
-        Message result = messageService.sendMessage(validMessageRequest);
-
-        assertNotNull(result);
-
-        verify(rateLimitService, never()).incrementCounter(testUser);
+        assertEquals("Failed to deliver message to any platform", exception.getMessage());
+        verify(rateLimitService, never()).incrementCounter(any());
+        verify(messageRepository, never()).save(any());
+        verify(rateLimitService).checkRateLimit(testUser);
     }
+
 
     @Test
     @DisplayName("Should throw exception when rate limit exceeded")

@@ -10,6 +10,7 @@ import com.notificationhub.entity.MessageDelivery;
 import com.notificationhub.entity.User;
 import com.notificationhub.enums.DeliveryStatus;
 import com.notificationhub.enums.PlatformType;
+import com.notificationhub.exception.custom.MessageDeliveryException;
 import com.notificationhub.repository.DailyMessageCountRepository;
 import com.notificationhub.repository.MessageDeliveryRepository;
 import com.notificationhub.repository.MessageRepository;
@@ -73,11 +74,18 @@ public class MessageServiceImpl implements MessageService {
         log.debug("Created message entity for user {}", currentUser.getUsername());
 
         List<MessageDelivery> deliveries = processMessageDeliveries(request, message);
+        boolean hasSuccessfulDelivery = deliveries.stream()
+                .anyMatch(d -> d.getStatus() == DeliveryStatus.SUCCESS);
+        if (!hasSuccessfulDelivery) {
+            log.warn("No successful deliveries for message from user {}. Not saving or counting.", currentUser.getUsername());
+            throw new MessageDeliveryException("Failed to deliver message to any platform");
+        }
 
         Message savedMessage = messageRepository.save(message);
         log.info("Message saved with {} deliveries", deliveries.size());
 
-        updateRateLimitIfNeeded(currentUser, deliveries);
+        rateLimitService.incrementCounter(currentUser);
+        log.info("Rate limit counter incremented for user {}", currentUser.getUsername());
 
         logMessageCompletion(savedMessage, deliveries);
 
@@ -191,18 +199,6 @@ public class MessageServiceImpl implements MessageService {
                     .status(DeliveryStatus.FAILED)
                     .errorMessage("Exception: " + e.getMessage())
                     .build();
-        }
-    }
-
-    private void updateRateLimitIfNeeded(User user, List<MessageDelivery> deliveries) {
-        boolean hasSuccessfulDelivery = deliveries.stream()
-                .anyMatch(d -> d.getStatus() == DeliveryStatus.SUCCESS);
-
-        if (hasSuccessfulDelivery) {
-            rateLimitService.incrementCounter(user);
-            log.info("Rate limit counter incremented for user {}", user.getUsername());
-        } else {
-            log.warn("No successful deliveries. Rate limit NOT incremented for user {}", user.getUsername());
         }
     }
 
