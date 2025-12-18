@@ -14,6 +14,7 @@ Notification Hub es una API REST que centraliza el envío de notificaciones a m�
 - **Gestión de Entregas**: Seguimiento detallado del estado de cada entrega (SUCCESS, PENDING, FAILED) con validación estricta - mensajes solo se guardan si al menos una entrega es exitosa
 - **Roles de Usuario**: Sistema de roles (USER, ADMIN) con endpoints administrativos
 - **Filtrado Avanzado**: Búsqueda de mensajes por estado, plataforma y rango de fechas
+- **Paginación**: Soporte completo de paginación en endpoints de consulta con parámetros configurables
 - **Optimización N+1**: Solución al problema N+1 query mediante `JOIN FETCH` para carga eficiente de relaciones
 - **Documentación Swagger**: API completamente documentada con OpenAPI 3.0
 - **Persistencia**: Base de datos MySQL/PostgreSQL con JPA/Hibernate
@@ -185,17 +186,31 @@ Una vez ejecutada la aplicación localmente, la documentación Swagger está dis
 
 #### 💬 Mensajes (`/api/messages`)
 
-| Método | Endpoint             | Descripción                      | Autenticación | Rol  |
-| ------ | -------------------- | -------------------------------- | ------------- | ---- |
-| `POST` | `/api/messages/send` | Enviar mensaje multi-plataforma  | Sí            | USER |
-| `GET`  | `/api/messages`      | Obtener mis mensajes con filtros | Sí            | USER |
+| Método | Endpoint             | Descripción                                     | Autenticación | Rol  |
+| ------ | -------------------- | ----------------------------------------------- | ------------- | ---- |
+| `POST` | `/api/messages/send` | Enviar mensaje multi-plataforma                 | Sí            | USER |
+| `GET`  | `/api/messages`      | Obtener mis mensajes con filtros y paginación  | Sí            | USER |
+
+**Parámetros de Paginación (GET /api/messages):**
+- `page`: Número de página (0-indexed, default: 0)
+- `size`: Elementos por página (default: 20, máximo recomendado: 100)
+
+**Parámetros de Filtro (GET /api/messages):**
+- `status`: Estado de entrega (SUCCESS, FAILED, PENDING)
+- `platform`: Plataforma (TELEGRAM, DISCORD)
+- `from`: Fecha desde (ISO 8601, ej: 2025-01-01T00:00:00)
+- `to`: Fecha hasta (ISO 8601, ej: 2025-12-31T23:59:59)
 
 #### 🛡️ Administración (`/api/admin`)
 
-| Método | Endpoint              | Descripción                        | Autenticación | Rol   |
-| ------ | --------------------- | ---------------------------------- | ------------- | ----- |
-| `GET`  | `/api/admin/messages` | Ver todos los mensajes del sistema | Sí            | ADMIN |
-| `GET`  | `/api/admin/metrics`  | Ver métricas de todos los usuarios | Sí            | ADMIN |
+| Método | Endpoint              | Descripción                                       | Autenticación | Rol   |
+| ------ | --------------------- | ---------------------------------------------- | ------------- | ----- |
+| `GET`  | `/api/admin/messages` | Ver todos los mensajes del sistema con paginación | Sí            | ADMIN |
+| `GET`  | `/api/admin/metrics`  | Ver métricas de todos los usuarios                | Sí            | ADMIN |
+
+**Parámetros de Paginación (GET /api/admin/messages):**
+- `page`: Número de página (0-indexed, default: 0)
+- `size`: Elementos por página (default: 20, máximo recomendado: 100)
 
 ## 🗂️ Estructura del Proyecto
 
@@ -347,6 +362,25 @@ Implementación de lógica estricta para garantizar integridad en el envío de m
 
 **Testing:** Lógica de validación cubierta por tests unitarios que verifican excepciones, no guardado de mensajes fallidos y correcto manejo del rate limit.
 
+### Paginación y Filtrado Optimizado
+
+Implementación de paginación eficiente para manejar grandes volúmenes de datos:
+
+**Características:**
+- **Paginación Spring Data JPA**: Uso de `Pageable` con `Page<T>` para consultas eficientes
+- **Ordenamiento Consistente**: Resultados ordenados por fecha de creación descendente
+- **Metadatos Completos**: Respuestas incluyen total de elementos, páginas disponibles, tamaño actual, etc.
+- **Filtros Combinables**: Combinación de filtros (estado, plataforma, fechas) con paginación
+- **Límites de Rendimiento**: Tamaño de página por defecto 20, máximo recomendado 100
+
+**Beneficios:**
+- ✅ Reducción de carga de memoria y tiempo de respuesta
+- ✅ Navegación eficiente a través de grandes datasets
+- ✅ API consistente con estándares de paginación REST
+- ✅ Optimización automática de queries en base de datos
+
+**Testing:** Paginación cubierta por tests exhaustivos que validan metadatos, navegación entre páginas, filtros combinados y límites de página.
+
 ## 📊 Límites y Restricciones
 
 - **Longitud máxima del mensaje**: 4000 caracteres
@@ -413,6 +447,7 @@ La API devuelve respuestas de error consistentes, incluyendo excepciones especí
 - **Resolución de Issues de Seguridad**: Configuración segura de credenciales de administrador
 - **Refactorización de Arquitectura de Repositorios**: Consultas optimizadas y centralizadas para mejor rendimiento y seguridad
 - **Validación Estricta de Entregas**: Mensajes solo se guardan si al menos una entrega es exitosa, previniendo desperdicio de rate limits
+- **Paginación Completa**: Implementación de paginación en endpoints de consulta con metadatos completos (total elementos, páginas, etc.)
 
 ## 💡 Posibles Mejoras Futuras
 
