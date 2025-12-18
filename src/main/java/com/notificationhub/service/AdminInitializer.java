@@ -3,8 +3,8 @@ package com.notificationhub.service;
 import com.notificationhub.entity.User;
 import com.notificationhub.enums.Role;
 import com.notificationhub.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -12,11 +12,24 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
-@RequiredArgsConstructor
-public class AdminInitializerService implements ApplicationRunner {
+public class AdminInitializer implements ApplicationRunner {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final String adminUsername;
+    private final String adminPassword;
+
+    public AdminInitializer(
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            @Value("${ADMIN_USERNAME}") String adminUsername,
+            @Value("${ADMIN_PASSWORD}") String adminPassword
+    ) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.adminUsername = adminUsername;
+        this.adminPassword = adminPassword;
+    }
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
@@ -25,16 +38,16 @@ public class AdminInitializerService implements ApplicationRunner {
 
     private void initializeAdminUser() {
         try {
-            if (userRepository.findByUsername("admin").isEmpty()) {
+            if (userRepository.findByUsername(adminUsername).isEmpty()) {
                 User admin = User.builder()
-                        .username("admin")
-                        .passwordHash(passwordEncoder.encode("admin123"))
+                        .username(adminUsername)
+                        .passwordHash(passwordEncoder.encode(adminPassword))
                         .role(Role.ADMIN)
                         .dailyMessageLimit(1000)
                         .build();
 
                 userRepository.save(admin);
-                log.info("Usuario admin creado automáticamente. Username: admin, Password: admin123");
+                log.info("Usuario admin creado exitosamente");
             }
         } catch (Exception e) {
             log.error("Error creando usuario admin: {}", e.getMessage());

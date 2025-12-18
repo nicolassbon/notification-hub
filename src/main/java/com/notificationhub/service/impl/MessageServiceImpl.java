@@ -112,7 +112,6 @@ public class MessageServiceImpl implements MessageService {
                 .to(to)
                 .build();
 
-        List<Message> messages = retrieveUserMessages(currentUser, criteria);
         List<Message> filteredMessages = messageDeliveryRepository.findMessagesByFilters(criteria);
 
         log.info("Retrieved {} filtered messages for user {}", filteredMessages.size(), currentUser.getUsername());
@@ -214,13 +213,5 @@ public class MessageServiceImpl implements MessageService {
 
         log.info("Message processing completed. ID: {}, Successful deliveries: {}/{}",
                 message.getId(), successfulCount, deliveries.size());
-    }
-
-    private List<Message> retrieveUserMessages(User user, MessageFilterCriteria criteria) {
-        if (criteria.hasDateFilters()) {
-            return messageRepository.findByUserAndCreatedAtBetweenOrderByCreatedAtDesc(user, criteria.from(), criteria.to());
-        } else {
-            return messageRepository.findByUserOrderByCreatedAtDesc(user);
-        }
     }
 }
