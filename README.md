@@ -11,7 +11,7 @@ Notification Hub es una API REST que centraliza el envío de notificaciones a m�
 - **Autenticación JWT**: Sistema seguro de autenticación con tokens que expiran en 24 horas
 - **Multi-plataforma**: Soporte para Telegram y Discord con posibilidad de extensión a otras plataformas
 - **Rate Limiting**: Control de límite diario de mensajes por usuario (configurable, por defecto 100/día) con protección contra race conditions
-- **Gestión de Entregas**: Seguimiento detallado del estado de cada entrega (SUCCESS, PENDING, FAILED)
+- **Gestión de Entregas**: Seguimiento detallado del estado de cada entrega (SUCCESS, PENDING, FAILED) con validación estricta - mensajes solo se guardan si al menos una entrega es exitosa
 - **Roles de Usuario**: Sistema de roles (USER, ADMIN) con endpoints administrativos
 - **Filtrado Avanzado**: Búsqueda de mensajes por estado, plataforma y rango de fechas
 - **Optimización N+1**: Solución al problema N+1 query mediante `JOIN FETCH` para carga eficiente de relaciones
@@ -158,6 +158,13 @@ mvnw.cmd spring-boot:run
 | ----------------------- | ---------------------------- | --------- | ------------- | ------- |
 | `SPRING_ACTIVE_PROFILE` | Perfil de Spring Boot activo | Sí        | `dev`, `prod` | `dev`   |
 
+### Administrador
+
+| Variable        | Descripción                     | Requerido | Ejemplo          |
+| --------------- | ------------------------------- | --------- | ---------------- |
+| `ADMIN_USERNAME`| Nombre de usuario administrador  | Sí        | `admin`          |
+| `ADMIN_PASSWORD`| Contraseña del administrador     | Sí        | `securepassword` |
+
 ## 📚 Documentación de la API
 
 ### Swagger UI (Ejecución Local)
@@ -259,6 +266,7 @@ Configurar las siguientes variables en el dashboard de Render:
 - **Roles**: Sistema de roles para control de acceso (USER, ADMIN)
 - **Encriptación**: Contraseñas hasheadas con BCrypt
 - **HTTPS**: Configurado para usar HTTPS en producción
+- **Configuración Segura de Admin**: Credenciales de administrador configuradas vía propiedades de aplicación en lugar de variables de entorno directas
 
 ## ⚡ Optimizaciones de Rendimiento
 
@@ -295,7 +303,49 @@ Implementación de bloqueo pesimista y operaciones atómicas para evitar condici
 - ✅ Previene que usuarios excedan su límite diario en requests concurrentes
 - ✅ Transacciones ACID completas
 
-**Testing:** Ambas optimizaciones están cubiertas por tests unitarios que validan el comportamiento en escenarios concurrentes y de carga normal.
+### Refactorización de Arquitectura de Repositorios
+
+Reorganización de la lógica de consultas para mejorar el rendimiento y la mantenibilidad:
+
+**Problema:** Consultas de filtrado complejas dispersas en múltiples métodos, potencialmente causando N+1 queries y código duplicado.
+
+**Solución implementada:**
+
+- **Centralización de Filtrado:** Lógica de filtrado avanzado (por estado, plataforma, fechas) movida a `MessageDeliveryRepository` usando un método único con criterios
+- **Eliminación de Métodos Redundantes:** Removidos métodos obsoletos en `MessageRepository` que duplicaban funcionalidad
+- **JOIN FETCH Optimizado:** Consultas con `LEFT JOIN FETCH` para cargar relaciones en una sola query, evitando problemas N+1
+- **Arquitectura Más Segura:** Consultas parametrizadas que previenen inyección SQL
+
+**Beneficios:**
+
+- ✅ Mejora significativa en rendimiento de consultas con filtros
+- ✅ Reducción de código duplicado y mantenimiento simplificado
+- ✅ Prevención de vulnerabilidades de inyección SQL
+- ✅ Suite de tests completa para validar el comportamiento
+
+**Testing:** Arquitectura refactorizada cubierta por tests unitarios exhaustivos que validan filtrado, ordenamiento y carga eficiente de relaciones.
+
+### Validación Estricta de Entregas de Mensajes
+
+Implementación de lógica estricta para garantizar integridad en el envío de mensajes:
+
+**Problema:** Anteriormente, mensajes fallidos se guardaban en la base de datos y consumían el límite diario del usuario, creando inconsistencias.
+
+**Solución implementada:**
+
+- **Validación Pre-Guardado:** Verificación de al menos una entrega exitosa antes de persistir el mensaje
+- **Prevención de Desperdicio de Límites:** Rate limit solo se incrementa si hay entregas exitosas
+- **Excepciones Específicas:** Lanza `MessageDeliveryException` con mensaje claro cuando todas las entregas fallan
+- **Transacciones Atómicas:** Toda la operación (validación, guardado, incremento de contador) en una transacción
+
+**Beneficios:**
+
+- ✅ Integridad de datos: Solo mensajes con entregas exitosas se persisten
+- ✅ Uso eficiente del rate limit: No se consumen slots por envíos fallidos
+- ✅ Mejor experiencia de usuario: Errores claros cuando todas las plataformas fallan
+- ✅ Prevención de spam accidental: Falla rápida sin efectos secundarios
+
+**Testing:** Lógica de validación cubierta por tests unitarios que verifican excepciones, no guardado de mensajes fallidos y correcto manejo del rate limit.
 
 ## 📊 Límites y Restricciones
 
@@ -324,25 +374,27 @@ El proyecto incluye una suite completa de tests:
 
 - ✅ Controllers (AuthController, MessageController, AdminController)
 - ✅ Services (AuthService, MessageService, RateLimitService, Platform Services)
-- ✅ Repositories (UserRepository, MessageRepository, DailyMessageCountRepository)
+- ✅ Repositories (UserRepository, MessageRepository, MessageDeliveryRepository, DailyMessageCountRepository)
 - ✅ Utils (JwtUtils)
 
 ## 🛠️ Manejo de Errores
 
-La API devuelve respuestas de error consistentes:
+La API devuelve respuestas de error consistentes, incluyendo excepciones específicas para fallos en entregas de mensajes:
 
 ```json
 {
   "status": 400,
   "error": "Bad Request",
-  "message": "Descripción del error",
+  "message": "Failed to deliver message to any platform",
   "timestamp": "2025-10-27T10:30:00",
-  "details": [
-    "content: no debe estar en blanco",
-    "destinations: debe tener al menos un elemento"
-  ]
+  "details": []
 }
 ```
+
+**Excepciones Personalizadas:**
+- `MessageDeliveryException`: Lanzada cuando todas las entregas de mensaje fallan
+- `RateLimitExceededException`: Cuando se supera el límite diario de mensajes
+- `InvalidCredentialsException`: Credenciales inválidas en autenticación
 
 ## 🚧 Estado del Proyecto
 
@@ -358,6 +410,9 @@ La API devuelve respuestas de error consistentes:
 - Configuración para deployment en producción
 - Optimización de queries (solución al problema N+1)
 - Operaciones atómicas y bloqueos transaccionales
+- **Resolución de Issues de Seguridad**: Configuración segura de credenciales de administrador
+- **Refactorización de Arquitectura de Repositorios**: Consultas optimizadas y centralizadas para mejor rendimiento y seguridad
+- **Validación Estricta de Entregas**: Mensajes solo se guardan si al menos una entrega es exitosa, previniendo desperdicio de rate limits
 
 ## 💡 Posibles Mejoras Futuras
 
