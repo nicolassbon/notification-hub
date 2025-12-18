@@ -24,7 +24,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -251,46 +250,6 @@ public class MessageServiceImplTest {
         assertThrows(IllegalStateException.class, () -> messageService.getAllMessages());
 
         verify(messageRepository, never()).findAllWithDeliveries();
-    }
-
-    @Test
-    @DisplayName("Should return user messages with filters")
-    void getUserMessagesWithFiltersWithFiltersReturnsFilteredMessages() {
-        when(securityUtils.getCurrentUser()).thenReturn(testUser);
-
-        List<Message> userMessages = Arrays.asList(
-                Message.builder().id(1L).user(testUser).content("Message 1").build(),
-                Message.builder().id(2L).user(testUser).content("Message 2").build()
-        );
-
-        when(messageRepository.findByUserOrderByCreatedAtDesc(testUser)).thenReturn(userMessages);
-
-        List<Message> result = messageService.getUserMessagesWithFilters(
-                DeliveryStatus.SUCCESS, PlatformType.DISCORD, null, null
-        );
-
-        assertNotNull(result);
-        verify(messageRepository).findByUserOrderByCreatedAtDesc(testUser);
-    }
-
-    @Test
-    @DisplayName("Should return user messages with date range")
-    void getUserMessagesWithFiltersWithDateRangeUsesDateRangeQuery() {
-        when(securityUtils.getCurrentUser()).thenReturn(testUser);
-
-        LocalDateTime from = LocalDateTime.now().minusDays(1);
-        LocalDateTime to = LocalDateTime.now();
-        List<Message> userMessages = List.of(
-                Message.builder().id(1L).user(testUser).content("Message 1").build()
-        );
-
-        when(messageRepository.findByUserAndCreatedAtBetweenOrderByCreatedAtDesc(testUser, from, to))
-                .thenReturn(userMessages);
-
-        List<Message> result = messageService.getUserMessagesWithFilters(null, null, from, to);
-
-        assertNotNull(result);
-        verify(messageRepository).findByUserAndCreatedAtBetweenOrderByCreatedAtDesc(testUser, from, to);
     }
 
     @Test

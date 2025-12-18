@@ -22,8 +22,8 @@ public class AdminInitializer implements ApplicationRunner {
     public AdminInitializer(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
-            @Value("${ADMIN_USERNAME}") String adminUsername,
-            @Value("${ADMIN_PASSWORD}") String adminPassword
+            @Value("${admin.username}") String adminUsername,
+            @Value("${admin.password}") String adminPassword
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;

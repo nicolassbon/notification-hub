@@ -35,6 +35,10 @@ discord:
   webhook:
     url: ${DISCORD_WEBHOOK_URL}
 
+admin:
+  username: ${ADMIN_USERNAME}
+  password: ${ADMIN_PASSWORD}
+
 logging:
   level:
     root: INFO

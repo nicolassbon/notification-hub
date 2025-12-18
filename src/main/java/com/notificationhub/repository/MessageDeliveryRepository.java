@@ -11,6 +11,7 @@ import java.util.List;
 public interface MessageDeliveryRepository extends JpaRepository<MessageDelivery, Long> {
   @Query("""
   SELECT DISTINCT md.message FROM MessageDelivery md
+  LEFT JOIN FETCH md.message.deliveries
   WHERE (:#{#criteria.user()} IS NULL OR md.message.user = :#{#criteria.user()})
   AND (:#{#criteria.from()} IS NULL OR md.message.createdAt >= :#{#criteria.from()})
   AND (:#{#criteria.to()} IS NULL OR md.message.createdAt <= :#{#criteria.to()})
