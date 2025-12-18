@@ -5,6 +5,8 @@ import com.notificationhub.dto.response.MetricsResponse;
 import com.notificationhub.entity.Message;
 import com.notificationhub.enums.DeliveryStatus;
 import com.notificationhub.enums.PlatformType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,26 +24,29 @@ public interface MessageService {
     Message sendMessage(MessageRequest request);
 
     /**
-     * Obtiene todos los mensajes del sistema (ADMIN)
+     * Obtiene todos los mensajes con paginación (ADMIN)
      *
-     * @return Lista de todos los mensajes
+     * @param pageable Parámetros de paginación
+     * @return Página de mensajes
      */
-    List<Message> getAllMessages();
+    Page<Message> getAllMessages(Pageable pageable);
 
     /**
-     * Obtiene mensajes del usuario con filtros
+     * Obtiene mensajes del usuario con filtros y paginación
      *
-     * @param status   Filtro por estado (opcional)
-     * @param platform Filtro por plataforma (opcional)
-     * @param from     Fecha desde (opcional)
-     * @param to       Fecha hasta (opcional)
-     * @return Lista de mensajes filtrados
+     * @param status   Filtro por estado de entrega (opcional)
+     * @param platform Filtro por tipo de plataforma (opcional)
+     * @param from     Filtro de fecha desde (opcional)
+     * @param to       Filtro de fecha hasta (opcional)
+     * @param pageable Parámetros de paginación
+     * @return Página de mensajes que cumplen con los filtros
      */
-    List<Message> getUserMessagesWithFilters(
+    Page<Message> getUserMessagesWithFilters(
             DeliveryStatus status,
             PlatformType platform,
             LocalDateTime from,
-            LocalDateTime to);
+            LocalDateTime to,
+            Pageable pageable);
 
     /**
      * Obtiene métricas de los usuarios (ADMIN)

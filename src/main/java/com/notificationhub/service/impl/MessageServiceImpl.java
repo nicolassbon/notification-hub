@@ -21,6 +21,8 @@ import com.notificationhub.service.platform.PlatformService;
 import com.notificationhub.service.platform.PlatformServiceFactory;
 import com.notificationhub.utils.SecurityUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -92,24 +94,19 @@ public class MessageServiceImpl implements MessageService {
         return savedMessage;
     }
 
-    public List<Message> getAllMessages() {
+    public Page<Message> getAllMessages(Pageable pageable) {
         if (!securityUtils.isAdmin()) {
             throw new IllegalStateException("Only admins can view all messages");
         }
-
-        List<Message> messages = messageRepository.findAllWithDeliveries();
-
-        log.info("Admin retrieved {} messages", messages.size());
-
-        return messages;
+        return messageRepository.findAll(pageable);
     }
 
-    public List<Message> getUserMessagesWithFilters(
+    public Page<Message> getUserMessagesWithFilters(
             DeliveryStatus status,
             PlatformType platform,
             LocalDateTime from,
-            LocalDateTime to) {
-
+            LocalDateTime to,
+            Pageable pageable) {
         User currentUser = getAuthenticatedUser();
 
         MessageFilterCriteria criteria = MessageFilterCriteria.builder()
@@ -120,10 +117,7 @@ public class MessageServiceImpl implements MessageService {
                 .to(to)
                 .build();
 
-        List<Message> filteredMessages = messageDeliveryRepository.findMessagesByFilters(criteria);
-
-        log.info("Retrieved {} filtered messages for user {}", filteredMessages.size(), currentUser.getUsername());
-        return filteredMessages;
+        return messageDeliveryRepository.findMessagesByFilters(criteria, pageable);
     }
 
     public List<MetricsResponse> getAllUserMetrics() {

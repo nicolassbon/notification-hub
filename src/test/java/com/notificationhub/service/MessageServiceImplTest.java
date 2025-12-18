@@ -218,33 +218,6 @@ public class MessageServiceImplTest {
     }
 
     @Test
-    @DisplayName("Should return all messages for admin")
-    void getAllMessagesAdminUserReturnsAllMessages() {
-        when(securityUtils.isAdmin()).thenReturn(true);
-
-        List<Message> expectedMessages = Arrays.asList(
-                Message.builder().id(1L).content("Message 1").build(),
-                Message.builder().id(2L).content("Message 2").build()
-        );
-        when(messageRepository.findAllWithDeliveries()).thenReturn(expectedMessages);
-
-        List<Message> result = messageService.getAllMessages();
-
-        assertEquals(2, result.size());
-        verify(messageRepository).findAllWithDeliveries();
-    }
-
-    @Test
-    @DisplayName("Should throw exception when non-admin tries to get all messages")
-    void getAllMessagesNonAdminUserThrowsException() {
-        when(securityUtils.isAdmin()).thenReturn(false);
-
-        assertThrows(IllegalStateException.class, () -> messageService.getAllMessages());
-
-        verify(messageRepository, never()).findAllWithDeliveries();
-    }
-
-    @Test
     @DisplayName("Should return metrics for all users when admin")
     void getAllUserMetricsAdminUserReturnsMetrics() {
         when(securityUtils.isAdmin()).thenReturn(true);

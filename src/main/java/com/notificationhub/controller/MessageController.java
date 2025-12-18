@@ -19,13 +19,16 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/messages")
@@ -245,38 +248,36 @@ public class MessageController {
                     )
             )
     })
-    public ResponseEntity<List<MessageResponse>> getMyMessages(
-            @Parameter(
-                    description = "Filter by delivery status (SUCCESS, PENDING, FAILED)",
-                    example = "SUCCESS"
-            )
+    public ResponseEntity<Page<MessageResponse>> getMyMessages(
+            @Parameter(description = "Filter by delivery status (SUCCESS, PENDING, FAILED)", example = "SUCCESS")
             @RequestParam(required = false) DeliveryStatus status,
 
-            @Parameter(
-                    description = "Filter by platform (TELEGRAM, DISCORD)",
-                    example = "TELEGRAM"
-            )
+            @Parameter(description = "Filter by platform (TELEGRAM, DISCORD)", example = "TELEGRAM")
             @RequestParam(required = false) PlatformType platform,
 
-            @Parameter(
-                    description = "Start date for date range filter (ISO 8601 format)",
-                    example = "2025-01-01T00:00:00"
-            )
+            @Parameter(description = "Start date for date range filter (ISO 8601 format)", example = "2025-01-01T00:00:00")
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
 
-            @Parameter(
-                    description = "End date for date range filter (ISO 8601 format)",
-                    example = "2025-12-31T23:59:59"
-            )
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
+            @Parameter(description = "End date for date range filter (ISO 8601 format)", example = "2025-12-31T23:59:59")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
 
-        log.info("User requesting messages with filters - status: {}, platform: {}, from: {}, to: {}",
-                status, platform, from, to);
+            @Parameter(description = "Page number (0-indexed)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
 
-        List<Message> messages = messageService.getUserMessagesWithFilters(status, platform, from, to);
-        List<MessageResponse> responses = messageMapper.toResponseList(messages);
+            @Parameter(description = "Number of items per page", example = "20")
+            @RequestParam(defaultValue = "20") int size
+    ) {
 
-        log.info("Returning {} messages to user", responses.size());
+        log.info("User requesting messages with filters - status: {}, platform: {}, from: {}, to: {}, page: {}, size: {}",
+                status, platform, from, to, page, size);
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+
+        Page<Message> messages = messageService.getUserMessagesWithFilters(status, platform, from, to, pageable);
+        Page<MessageResponse> responses = messages.map(messageMapper::toResponse);
+
+        log.info("Returning page {} with {} messages (total: {})", page, responses.getNumberOfElements(), responses.getTotalElements());
         return ResponseEntity.ok(responses);
     }
 

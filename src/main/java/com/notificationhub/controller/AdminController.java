@@ -7,6 +7,7 @@ import com.notificationhub.entity.Message;
 import com.notificationhub.mapper.MessageMapper;
 import com.notificationhub.service.MessageService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -15,10 +16,15 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -40,7 +46,7 @@ public class AdminController {
     @GetMapping("/messages")
     @Operation(
             summary = "Get all messages (Admin only)",
-            description = "Retrieve all messages from all users in the system. Only accessible by users with ADMIN role.",
+            description = "Retrieve all messages from all users in the system with pagination. Only accessible by users with ADMIN role.",
             security = @SecurityRequirement(name = "bearer-jwt")
     )
     @ApiResponses(value = {
@@ -89,13 +95,21 @@ public class AdminController {
                     )
             )
     })
-    public ResponseEntity<List<MessageResponse>> getAllMessages() {
-        log.info("Admin requesting all messages");
+    public ResponseEntity<Page<MessageResponse>> getAllMessages(
+            @Parameter(description = "Page number (0-indexed)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
 
-        List<Message> messages = messageService.getAllMessages();
-        List<MessageResponse> responses = messageMapper.toResponseList(messages);
+            @Parameter(description = "Number of items per page", example = "20")
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        log.info("Admin requesting all messages - page: {}, size: {}", page, size);
 
-        log.info("Returning {} messages to admin", responses.size());
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        Page<Message> messages = messageService.getAllMessages(pageable);
+        Page<MessageResponse> responses = messages.map(messageMapper::toResponse);
+
+        log.info("Returning page {} with {} messages (total: {})", page, responses.getNumberOfElements(), responses.getTotalElements());
         return ResponseEntity.ok(responses);
     }
 

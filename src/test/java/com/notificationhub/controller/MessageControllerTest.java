@@ -18,6 +18,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -314,89 +318,150 @@ class MessageControllerTest {
     @Test
     @DisplayName("Should return user messages without filters")
     void getMyMessagesWithoutFiltersReturnsOk() throws Exception {
-        List<Message> userMessages = List.of(successMessage);
-        List<MessageResponse> userResponses = List.of(successResponse);
+        org.springframework.data.domain.Page<Message> messagePage = createMockPage(
+                List.of(successMessage),
+                0,
+                20,
+                1
+        );
 
-        when(messageService.getUserMessagesWithFilters(isNull(), isNull(), isNull(), isNull()))
-                .thenReturn(userMessages);
-        when(messageMapper.toResponseList(userMessages)).thenReturn(userResponses);
+        when(messageService.getUserMessagesWithFilters(
+                isNull(),
+                isNull(),
+                isNull(),
+                isNull(),
+                any(org.springframework.data.domain.Pageable.class)
+        )).thenReturn(messagePage);
+        when(messageMapper.toResponse(any(Message.class))).thenReturn(successResponse);
 
         mockMvc.perform(get(API_MESSAGES_GET))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].id").value(1L))
-                .andExpect(jsonPath("$[0].username").value("testuser"));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].id").value(1L))
+                .andExpect(jsonPath("$.content[0].username").value("testuser"));
 
-        verify(messageService).getUserMessagesWithFilters(isNull(), isNull(), isNull(), isNull());
-        verify(messageMapper).toResponseList(userMessages);
+        verify(messageService).getUserMessagesWithFilters(
+                isNull(),
+                isNull(),
+                isNull(),
+                isNull(),
+                any(org.springframework.data.domain.Pageable.class)
+        );
     }
 
     @Test
     @DisplayName("Should return user messages with status filter")
     void getMyMessagesWithStatusFilterReturnsOk() throws Exception {
-        List<Message> userMessages = List.of(successMessage);
-        List<MessageResponse> userResponses = List.of(successResponse);
+        org.springframework.data.domain.Page<Message> messagePage = createMockPage(
+                List.of(successMessage),
+                0,
+                20,
+                1
+        );
 
-        when(messageService.getUserMessagesWithFilters(eq(DeliveryStatus.SUCCESS), isNull(), isNull(), isNull()))
-                .thenReturn(userMessages);
-        when(messageMapper.toResponseList(userMessages)).thenReturn(userResponses);
+        when(messageService.getUserMessagesWithFilters(
+                eq(DeliveryStatus.SUCCESS),
+                isNull(),
+                isNull(),
+                isNull(),
+                any(org.springframework.data.domain.Pageable.class)
+        )).thenReturn(messagePage);
+        when(messageMapper.toResponse(any(Message.class))).thenReturn(successResponse);
 
         mockMvc.perform(get(API_MESSAGES_GET)
                         .param("status", "SUCCESS"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1));
+                .andExpect(jsonPath("$.content.length()").value(1));
 
-        verify(messageService).getUserMessagesWithFilters(eq(DeliveryStatus.SUCCESS), isNull(), isNull(), isNull());
-        verify(messageMapper).toResponseList(userMessages);
+        verify(messageService).getUserMessagesWithFilters(
+                eq(DeliveryStatus.SUCCESS),
+                isNull(),
+                isNull(),
+                isNull(),
+                any(org.springframework.data.domain.Pageable.class)
+        );
     }
 
     @Test
     @DisplayName("Should return user messages with platform filter")
     void getMyMessagesWithPlatformFilterReturnsOk() throws Exception {
-        List<Message> userMessages = List.of(successMessage);
-        List<MessageResponse> userResponses = List.of(successResponse);
+        org.springframework.data.domain.Page<Message> messagePage = createMockPage(
+                List.of(successMessage),
+                0,
+                20,
+                1
+        );
 
-        when(messageService.getUserMessagesWithFilters(isNull(), eq(PlatformType.DISCORD), isNull(), isNull()))
-                .thenReturn(userMessages);
-        when(messageMapper.toResponseList(userMessages)).thenReturn(userResponses);
+        when(messageService.getUserMessagesWithFilters(
+                isNull(),
+                eq(PlatformType.DISCORD),
+                isNull(),
+                isNull(),
+                any(org.springframework.data.domain.Pageable.class)
+        )).thenReturn(messagePage);
+        when(messageMapper.toResponse(any(Message.class))).thenReturn(successResponse);
 
         mockMvc.perform(get(API_MESSAGES_GET)
                         .param("platform", "DISCORD"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1));
+                .andExpect(jsonPath("$.content.length()").value(1));
 
-        verify(messageService).getUserMessagesWithFilters(isNull(), eq(PlatformType.DISCORD), isNull(), isNull());
-        verify(messageMapper).toResponseList(userMessages);
+        verify(messageService).getUserMessagesWithFilters(
+                isNull(),
+                eq(PlatformType.DISCORD),
+                isNull(),
+                isNull(),
+                any(org.springframework.data.domain.Pageable.class)
+        );
     }
 
     @Test
     @DisplayName("Should return user messages with date range filter")
     void getMyMessagesWithDateRangeReturnsOk() throws Exception {
-        List<Message> userMessages = List.of(successMessage);
-        List<MessageResponse> userResponses = List.of(successResponse);
+        org.springframework.data.domain.Page<Message> messagePage = createMockPage(
+                List.of(successMessage),
+                0,
+                20,
+                1
+        );
 
         LocalDateTime from = LocalDateTime.now().minusDays(1);
         LocalDateTime to = LocalDateTime.now();
 
-        when(messageService.getUserMessagesWithFilters(isNull(), isNull(), eq(from), eq(to)))
-                .thenReturn(userMessages);
-        when(messageMapper.toResponseList(userMessages)).thenReturn(userResponses);
+        when(messageService.getUserMessagesWithFilters(
+                isNull(),
+                isNull(),
+                any(LocalDateTime.class),
+                any(LocalDateTime.class),
+                any(org.springframework.data.domain.Pageable.class)
+        )).thenReturn(messagePage);
+        when(messageMapper.toResponse(any(Message.class))).thenReturn(successResponse);
 
         mockMvc.perform(get(API_MESSAGES_GET)
                         .param("from", from.toString())
                         .param("to", to.toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1));
+                .andExpect(jsonPath("$.content.length()").value(1));
 
-        verify(messageService).getUserMessagesWithFilters(isNull(), isNull(), eq(from), eq(to));
-        verify(messageMapper).toResponseList(userMessages);
+        verify(messageService).getUserMessagesWithFilters(
+                isNull(),
+                isNull(),
+                any(LocalDateTime.class),
+                any(LocalDateTime.class),
+                any(org.springframework.data.domain.Pageable.class)
+        );
     }
 
     @Test
     @DisplayName("Should return user messages with all filters")
     void getMyMessagesWithAllFiltersReturnsOk() throws Exception {
-        List<Message> userMessages = List.of(successMessage);
-        List<MessageResponse> userResponses = List.of(successResponse);
+        org.springframework.data.domain.Page<Message> messagePage = createMockPage(
+                List.of(successMessage),
+                0,
+                20,
+                1
+        );
 
         LocalDateTime from = LocalDateTime.now().minusDays(1);
         LocalDateTime to = LocalDateTime.now();
@@ -404,10 +469,11 @@ class MessageControllerTest {
         when(messageService.getUserMessagesWithFilters(
                 eq(DeliveryStatus.SUCCESS),
                 eq(PlatformType.TELEGRAM),
-                eq(from),
-                eq(to)))
-                .thenReturn(userMessages);
-        when(messageMapper.toResponseList(userMessages)).thenReturn(userResponses);
+                any(LocalDateTime.class),
+                any(LocalDateTime.class),
+                any(org.springframework.data.domain.Pageable.class)
+        )).thenReturn(messagePage);
+        when(messageMapper.toResponse(any(Message.class))).thenReturn(successResponse);
 
         mockMvc.perform(get(API_MESSAGES_GET)
                         .param("status", "SUCCESS")
@@ -415,14 +481,15 @@ class MessageControllerTest {
                         .param("from", from.toString())
                         .param("to", to.toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1));
+                .andExpect(jsonPath("$.content.length()").value(1));
 
         verify(messageService).getUserMessagesWithFilters(
                 eq(DeliveryStatus.SUCCESS),
                 eq(PlatformType.TELEGRAM),
-                eq(from),
-                eq(to));
-        verify(messageMapper).toResponseList(userMessages);
+                any(LocalDateTime.class),
+                any(LocalDateTime.class),
+                any(org.springframework.data.domain.Pageable.class)
+        );
     }
 
     @Test
@@ -433,35 +500,253 @@ class MessageControllerTest {
                         .param("to", "invalid-date"))
                 .andExpect(status().isBadRequest());
 
-        verify(messageService, never()).getUserMessagesWithFilters(any(), any(), any(), any());
-        verify(messageMapper, never()).toResponseList(any());
+        verify(messageService, never()).getUserMessagesWithFilters(any(), any(), any(), any(), any());
     }
 
     @Test
     @DisplayName("Should handle service exception in getMyMessages")
     void getMyMessagesServiceThrowsExceptionReturnsError() throws Exception {
-        when(messageService.getUserMessagesWithFilters(isNull(), isNull(), isNull(), isNull()))
-                .thenThrow(new RuntimeException("Service error"));
+        when(messageService.getUserMessagesWithFilters(
+                isNull(),
+                isNull(),
+                isNull(),
+                isNull(),
+                any(org.springframework.data.domain.Pageable.class)
+        )).thenThrow(new RuntimeException("Service error"));
 
         mockMvc.perform(get(API_MESSAGES_GET))
                 .andExpect(status().is5xxServerError());
 
-        verify(messageService).getUserMessagesWithFilters(isNull(), isNull(), isNull(), isNull());
-        verify(messageMapper, never()).toResponseList(any());
+        verify(messageService).getUserMessagesWithFilters(
+                isNull(),
+                isNull(),
+                isNull(),
+                isNull(),
+                any(org.springframework.data.domain.Pageable.class)
+        );
     }
 
     @Test
     @DisplayName("Should return empty list when no messages found")
     void getMyMessagesNoMessagesReturnsEmptyList() throws Exception {
-        when(messageService.getUserMessagesWithFilters(isNull(), isNull(), isNull(), isNull()))
-                .thenReturn(List.of());
-        when(messageMapper.toResponseList(List.of())).thenReturn(List.of());
+        org.springframework.data.domain.Page<Message> emptyPage = createMockPage(
+                List.of(),
+                0,
+                20,
+                0
+        );
+
+        when(messageService.getUserMessagesWithFilters(
+                isNull(),
+                isNull(),
+                isNull(),
+                isNull(),
+                any(org.springframework.data.domain.Pageable.class)
+        )).thenReturn(emptyPage);
 
         mockMvc.perform(get(API_MESSAGES_GET))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.content").isEmpty())
+                .andExpect(jsonPath("$.empty").value(true));
 
-        verify(messageService).getUserMessagesWithFilters(isNull(), isNull(), isNull(), isNull());
-        verify(messageMapper).toResponseList(List.of());
+        verify(messageService).getUserMessagesWithFilters(
+                isNull(),
+                isNull(),
+                isNull(),
+                isNull(),
+                any(org.springframework.data.domain.Pageable.class)
+        );
+    }
+
+    // ==================== PAGINATION TESTS ====================
+
+    @Test
+    @DisplayName("Should return paginated messages with default page and size")
+    void getMyMessagesPaginatedDefaultParams() throws Exception {
+        // Arrange
+        org.springframework.data.domain.Page<Message> messagePage = createMockPage(
+                List.of(successMessage),
+                0,
+                20,
+                1
+        );
+
+        when(messageService.getUserMessagesWithFilters(
+                isNull(),
+                isNull(),
+                isNull(),
+                isNull(),
+                any(org.springframework.data.domain.Pageable.class)
+        )).thenReturn(messagePage);
+
+        when(messageMapper.toResponse(any(Message.class))).thenReturn(successResponse);
+
+        // Act & Assert
+        mockMvc.perform(get(API_MESSAGES_GET)
+                        .param("page", "0")
+                        .param("size", "20"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.totalPages").value(1))
+                .andExpect(jsonPath("$.size").value(20))
+                .andExpect(jsonPath("$.number").value(0))
+                .andExpect(jsonPath("$.first").value(true))
+                .andExpect(jsonPath("$.last").value(true));
+
+        verify(messageService).getUserMessagesWithFilters(
+                isNull(),
+                isNull(),
+                isNull(),
+                isNull(),
+                any(org.springframework.data.domain.Pageable.class)
+        );
+    }
+
+    @Test
+    @DisplayName("Should return second page with correct pagination metadata")
+    void getMyMessagesPaginatedSecondPage() throws Exception {
+        // Arrange - simular página 2 de 3
+        org.springframework.data.domain.Page<Message> messagePage = createMockPage(
+                List.of(successMessage),
+                1, // página 1 (segunda página, 0-indexed)
+                20,
+                50 // 50 elementos totales = 3 páginas
+        );
+
+        when(messageService.getUserMessagesWithFilters(
+                isNull(),
+                isNull(),
+                isNull(),
+                isNull(),
+                any(org.springframework.data.domain.Pageable.class)
+        )).thenReturn(messagePage);
+
+        when(messageMapper.toResponse(any(Message.class))).thenReturn(successResponse);
+
+        // Act & Assert
+        mockMvc.perform(get(API_MESSAGES_GET)
+                        .param("page", "1")
+                        .param("size", "20"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.number").value(1))
+                .andExpect(jsonPath("$.totalPages").value(3))
+                .andExpect(jsonPath("$.totalElements").value(50))
+                .andExpect(jsonPath("$.first").value(false))
+                .andExpect(jsonPath("$.last").value(false));
+    }
+
+    @Test
+    @DisplayName("Should return paginated messages with custom page size")
+    void getMyMessagesPaginatedCustomSize() throws Exception {
+        List<Message> messages = Arrays.asList(successMessage, successMessage, successMessage);
+
+        Page<Message> messagePage = createMockPage(
+                messages,
+                0,
+                10,
+                30
+        );
+
+        when(messageService.getUserMessagesWithFilters(
+                isNull(),
+                isNull(),
+                isNull(),
+                isNull(),
+                any(Pageable.class)
+        )).thenReturn(messagePage);
+
+        when(messageMapper.toResponse(any(Message.class))).thenReturn(successResponse);
+
+        mockMvc.perform(get(API_MESSAGES_GET)
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size").value(10))
+                .andExpect(jsonPath("$.numberOfElements").value(3))
+                .andExpect(jsonPath("$.totalPages").value(3));
+    }
+
+    @Test
+    @DisplayName("Should return paginated messages with filters applied")
+    void getMyMessagesPaginatedWithFilters() throws Exception {
+        Page<Message> messagePage = createMockPage(
+                List.of(successMessage),
+                0,
+                20,
+                1
+        );
+
+        when(messageService.getUserMessagesWithFilters(
+                eq(DeliveryStatus.SUCCESS),
+                eq(PlatformType.TELEGRAM),
+                any(LocalDateTime.class),
+                any(LocalDateTime.class),
+                any(Pageable.class)
+        )).thenReturn(messagePage);
+
+        when(messageMapper.toResponse(any(Message.class))).thenReturn(successResponse);
+
+        mockMvc.perform(get(API_MESSAGES_GET)
+                        .param("status", "SUCCESS")
+                        .param("platform", "TELEGRAM")
+                        .param("from", "2025-01-01T00:00:00")
+                        .param("to", "2025-12-31T23:59:59")
+                        .param("page", "0")
+                        .param("size", "20"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.totalElements").value(1));
+
+        verify(messageService).getUserMessagesWithFilters(
+                eq(DeliveryStatus.SUCCESS),
+                eq(PlatformType.TELEGRAM),
+                any(LocalDateTime.class),
+                any(LocalDateTime.class),
+                any(org.springframework.data.domain.Pageable.class)
+        );
+    }
+
+    @Test
+    @DisplayName("Should return empty page when no messages match pagination criteria")
+    void getMyMessagesPaginatedEmptyPage() throws Exception {
+        Page<Message> emptyPage = createMockPage(
+                List.of(),
+                0,
+                20,
+                0
+        );
+
+        when(messageService.getUserMessagesWithFilters(
+                isNull(),
+                isNull(),
+                isNull(),
+                isNull(),
+                any(org.springframework.data.domain.Pageable.class)
+        )).thenReturn(emptyPage);
+
+        // Act & Assert
+        mockMvc.perform(get(API_MESSAGES_GET)
+                        .param("page", "0")
+                        .param("size", "20"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isEmpty())
+                .andExpect(jsonPath("$.totalElements").value(0))
+                .andExpect(jsonPath("$.totalPages").value(0))
+                .andExpect(jsonPath("$.empty").value(true));
+    }
+
+    private Page<Message> createMockPage(
+            List<Message> content,
+            int pageNumber,
+            int pageSize,
+            long totalElements
+    ) {
+        return new PageImpl<>(
+                content,
+                PageRequest.of(pageNumber, pageSize),
+                totalElements
+        );
     }
 }
