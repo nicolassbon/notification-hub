@@ -6,6 +6,8 @@ import com.notificationhub.exception.custom.RateLimitExceededException;
 import com.notificationhub.repository.DailyMessageCountRepository;
 import com.notificationhub.service.RateLimitService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +40,7 @@ public class RateLimitServiceImpl implements RateLimitService {
         }
     }
 
+    @CacheEvict(value = "rateLimits", key = "#user.id + '_' + T(java.time.LocalDate).now()")
     public void incrementCounter(User user) {
         LocalDate today = LocalDate.now();
 
@@ -51,6 +54,7 @@ public class RateLimitServiceImpl implements RateLimitService {
         log.info("Incremented message counter for user {} atomically", user.getUsername());
     }
 
+    @Cacheable(value = "rateLimits", key = "#user.id + '_' + T(java.time.LocalDate).now()")
     public int getRemainingMessages(User user) {
         LocalDate today = LocalDate.now();
 

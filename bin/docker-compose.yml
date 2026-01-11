@@ -1,0 +1,59 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: notification-hub-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASS}
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 40s
+    networks:
+      - notification-network
+
+  app:
+    build: .
+    container_name: notification-hub-app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # Database
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASS}
+
+      # JWT
+      JWT_SECRET: ${JWT_SECRET}
+
+      # Platforms
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID}
+      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL}
+
+      # Spring Profile
+      SPRING_PROFILES_ACTIVE: prod
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - notification-network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  notification-network:
+    driver: bridge

@@ -21,6 +21,7 @@ import com.notificationhub.service.platform.PlatformService;
 import com.notificationhub.service.platform.PlatformServiceFactory;
 import com.notificationhub.utils.SecurityUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -87,11 +88,18 @@ public class MessageServiceImpl implements MessageService {
         log.info("Message saved with {} deliveries", deliveries.size());
 
         rateLimitService.incrementCounter(currentUser);
+        evictMessageCount(currentUser);
+
         log.info("Rate limit counter incremented for user {}", currentUser.getUsername());
 
         logMessageCompletion(savedMessage, deliveries);
 
         return savedMessage;
+    }
+
+    @CacheEvict(value = "messageCounts", key = "#user.id")
+    public void evictMessageCount(User user) {
+
     }
 
     public Page<Message> getAllMessages(Pageable pageable) {
