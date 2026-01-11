@@ -1,10 +1,10 @@
-# Notification Hub 🚀
+# Notification Hub
 
 Sistema de notificaciones multi-plataforma construido con Spring Boot que permite enviar mensajes a través de Telegram y Discord de manera unificada. Incluye autenticación JWT, limitación de tasa (rate limiting) y gestión completa de mensajes.
 
-> 📝 **Nota**: Este proyecto fue desarrollado como parte de una prueba técnica. Estuvo desplegado temporalmente en Render con PostgreSQL para demostrar capacidades de deployment en producción. Actualmente el deployment ha expirado, pero el proyecto puede ejecutarse localmente siguiendo las instrucciones más abajo.
+> **Nota**: Este proyecto fue desarrollado como parte de una prueba técnica. Estuvo desplegado temporalmente en Render con PostgreSQL para demostrar capacidades de deployment en producción. Actualmente el deployment ha expirado, pero el proyecto puede ejecutarse localmente siguiendo las instrucciones más abajo.
 
-## 📋 Descripción del Proyecto
+## Descripción del Proyecto
 
 Notification Hub es una API REST que centraliza el envío de notificaciones a múltiples plataformas (Telegram y Discord) con las siguientes características principales:
 
@@ -21,12 +21,13 @@ Notification Hub es una API REST que centraliza el envío de notificaciones a m�
 - **Testing**: Suite completa de tests unitarios e integración
 - **Deployment Ready**: Preparado para deployment con Docker y configuración para Render
 
-## 🛠️ Tecnologías
+## Tecnologías
 
 - **Java 21** - Lenguaje de programación
 - **Spring Boot 3.5.7** - Framework principal
 - **Spring Security** - Autenticación y autorización
 - **Spring Data JPA** - Capa de persistencia
+- **Spring Cache + Caffeine** - Sistema de caché in-memory
 - **MySQL 8.0** (dev) / **PostgreSQL** (prod) - Base de datos
 - **JWT (jsonwebtoken 0.12.5)** - Tokens de autenticación
 - **MapStruct 1.5.5** - Mapeo de DTOs
@@ -37,14 +38,14 @@ Notification Hub es una API REST que centraliza el envío de notificaciones a m�
 - **JUnit 5 & Mockito** - Testing
 - **Render** - Plataforma de deployment (configurado)
 
-## 📦 Requisitos Previos
+## Requisitos Previos
 
 - **Java 21** o superior
 - **Docker** y **Docker Compose** (para ejecutar con contenedores)
 - **Maven 3.8+** (opcional, incluido mvnw)
 - **MySQL 8.0** (si ejecutas sin Docker)
 
-## 🚀 Instalación y Configuración Local
+## Instalación y Configuración Local
 
 ### 1. Clonar el Repositorio
 
@@ -123,7 +124,7 @@ mvnw.cmd spring-boot:run
 ./mvnw verify
 ```
 
-## 🌐 Variables de Entorno
+## Variables de Entorno
 
 ### Base de Datos
 
@@ -166,7 +167,7 @@ mvnw.cmd spring-boot:run
 | `ADMIN_USERNAME`| Nombre de usuario administrador  | Sí        | `admin`          |
 | `ADMIN_PASSWORD`| Contraseña del administrador     | Sí        | `securepassword` |
 
-## 📚 Documentación de la API
+## Documentación de la API
 
 ### Swagger UI (Ejecución Local)
 
@@ -177,14 +178,14 @@ Una vez ejecutada la aplicación localmente, la documentación Swagger está dis
 
 ### Endpoints Disponibles
 
-#### 🔐 Autenticación (`/api/auth`)
+#### Autenticación (`/api/auth`)
 
 | Método | Endpoint             | Descripción             | Autenticación |
 | ------ | -------------------- | ----------------------- | ------------- |
 | `POST` | `/api/auth/register` | Registrar nuevo usuario | No            |
 | `POST` | `/api/auth/login`    | Iniciar sesión          | No            |
 
-#### 💬 Mensajes (`/api/messages`)
+#### Mensajes (`/api/messages`)
 
 | Método | Endpoint             | Descripción                                     | Autenticación | Rol  |
 | ------ | -------------------- | ----------------------------------------------- | ------------- | ---- |
@@ -201,7 +202,7 @@ Una vez ejecutada la aplicación localmente, la documentación Swagger está dis
 - `from`: Fecha desde (ISO 8601, ej: 2025-01-01T00:00:00)
 - `to`: Fecha hasta (ISO 8601, ej: 2025-12-31T23:59:59)
 
-#### 🛡️ Administración (`/api/admin`)
+#### Administración (`/api/admin`)
 
 | Método | Endpoint              | Descripción                                       | Autenticación | Rol   |
 | ------ | --------------------- | ---------------------------------------------- | ------------- | ----- |
@@ -212,7 +213,7 @@ Una vez ejecutada la aplicación localmente, la documentación Swagger está dis
 - `page`: Número de página (0-indexed, default: 0)
 - `size`: Elementos por página (default: 20, máximo recomendado: 100)
 
-## 🗂️ Estructura del Proyecto
+## Estructura del Proyecto
 
 ```
 notification-hub/
@@ -247,7 +248,7 @@ notification-hub/
 └── .env                             # Variables de entorno (no versionado)
 ```
 
-## 🚀 Deployment en Render
+## Deployment en Render
 
 La aplicación está configurada para desplegarse en Render. Para replicar el deployment:
 
@@ -273,7 +274,7 @@ Configurar las siguientes variables en el dashboard de Render:
 - `TELEGRAM_CHAT_ID`
 - `DISCORD_WEBHOOK_URL`
 
-## 🔒 Seguridad
+## Seguridad
 
 - **Autenticación JWT**: Endpoints que requieren token JWT
 - **Rate Limiting**: Límite diario de mensajes por usuario
@@ -283,7 +284,7 @@ Configurar las siguientes variables en el dashboard de Render:
 - **HTTPS**: Configurado para usar HTTPS en producción
 - **Configuración Segura de Admin**: Credenciales de administrador configuradas vía propiedades de aplicación en lugar de variables de entorno directas
 
-## ⚡ Optimizaciones de Rendimiento
+## Optimizaciones de Rendimiento
 
 ### Solución al Problema N+1 Query
 
@@ -314,9 +315,9 @@ Implementación de bloqueo pesimista y operaciones atómicas para evitar condici
 
 **Beneficios:**
 
-- ✅ Garantiza consistencia del contador en ambiente multi-thread
-- ✅ Previene que usuarios excedan su límite diario en requests concurrentes
-- ✅ Transacciones ACID completas
+- Garantiza consistencia del contador en ambiente multi-thread
+- Previene que usuarios excedan su límite diario en requests concurrentes
+- Transacciones ACID completas
 
 ### Refactorización de Arquitectura de Repositorios
 
@@ -333,10 +334,10 @@ Reorganización de la lógica de consultas para mejorar el rendimiento y la mant
 
 **Beneficios:**
 
-- ✅ Mejora significativa en rendimiento de consultas con filtros
-- ✅ Reducción de código duplicado y mantenimiento simplificado
-- ✅ Prevención de vulnerabilidades de inyección SQL
-- ✅ Suite de tests completa para validar el comportamiento
+- Mejora significativa en rendimiento de consultas con filtros
+- Reducción de código duplicado y mantenimiento simplificado
+- Prevención de vulnerabilidades de inyección SQL
+- Suite de tests completa para validar el comportamiento
 
 **Testing:** Arquitectura refactorizada cubierta por tests unitarios exhaustivos que validan filtrado, ordenamiento y carga eficiente de relaciones.
 
@@ -355,10 +356,10 @@ Implementación de lógica estricta para garantizar integridad en el envío de m
 
 **Beneficios:**
 
-- ✅ Integridad de datos: Solo mensajes con entregas exitosas se persisten
-- ✅ Uso eficiente del rate limit: No se consumen slots por envíos fallidos
-- ✅ Mejor experiencia de usuario: Errores claros cuando todas las plataformas fallan
-- ✅ Prevención de spam accidental: Falla rápida sin efectos secundarios
+- Integridad de datos: Solo mensajes con entregas exitosas se persisten
+- Uso eficiente del rate limit: No se consumen slots por envíos fallidos
+- Mejor experiencia de usuario: Errores claros cuando todas las plataformas fallan
+- Prevención de spam accidental: Falla rápida sin efectos secundarios
 
 **Testing:** Lógica de validación cubierta por tests unitarios que verifican excepciones, no guardado de mensajes fallidos y correcto manejo del rate limit.
 
@@ -374,21 +375,62 @@ Implementación de paginación eficiente para manejar grandes volúmenes de dato
 - **Límites de Rendimiento**: Tamaño de página por defecto 20, máximo recomendado 100
 
 **Beneficios:**
-- ✅ Reducción de carga de memoria y tiempo de respuesta
-- ✅ Navegación eficiente a través de grandes datasets
-- ✅ API consistente con estándares de paginación REST
-- ✅ Optimización automática de queries en base de datos
+- Reducción de carga de memoria y tiempo de respuesta
+- Navegación eficiente a través de grandes datasets
+- API consistente con estándares de paginación REST
+- Optimización automática de queries en base de datos
 
 **Testing:** Paginación cubierta por tests exhaustivos que validan metadatos, navegación entre páginas, filtros combinados y límites de página.
 
-## 📊 Límites y Restricciones
+### Sistema de Caché con Spring Cache y Caffeine
+
+Implementación de caché in-memory para optimizar consultas frecuentes y reducir carga en base de datos:
+
+**Estrategia de Caché:**
+
+- **Caché de Usuarios**: `UserRepository.findByUsername()` cachea búsquedas de usuarios por username (usado en autenticación)
+- **Caché de Rate Limits**: `RateLimitService.getRemainingMessages()` cachea el conteo de mensajes diarios por usuario y fecha
+- **Caché de Conteos**: `MessageRepository.countByUser()` cachea el total de mensajes enviados por usuario
+- **Invalidación Automática**: Uso de `@CacheEvict` en métodos que modifican datos (ej: `incrementCounter`)
+
+**Configuración:**
+
+- **TTL (Time-To-Live)**: 10 minutos de expiración automática para prevenir datos obsoletos
+- **Tamaño Máximo**: 1000 entradas en caché
+- **Motor**: Caffeine - librería de caché de alta performance para Java
+
+**Beneficios:**
+
+- Reducción significativa de queries a base de datos (especialmente en autenticación y rate limiting)
+- Mejora en tiempos de respuesta para operaciones frecuentes
+- Caché thread-safe y optimizado para concurrencia
+- Invalidación inteligente: solo limpia entradas cuando los datos cambian
+- Sin dependencias externas (no requiere Redis u otro servicio)
+
+**Ejemplo de uso:**
+
+```java
+// Primera llamada: consulta DB y cachea
+int remaining = rateLimitService.getRemainingMessages(user); // DB query
+
+// Segunda llamada (dentro de TTL): usa caché
+int remaining2 = rateLimitService.getRemainingMessages(user); // From cache
+
+// Después de enviar mensaje: invalida caché automáticamente
+rateLimitService.incrementCounter(user); // @CacheEvict limpia cache
+
+// Próxima llamada: recalcula desde DB
+int remaining3 = rateLimitService.getRemainingMessages(user); // DB query again
+```
+
+## Límites y Restricciones
 
 - **Longitud máxima del mensaje**: 4000 caracteres
 - **Rate limit por defecto**: 100 mensajes/día
 - **Expiración del token JWT**: 24 horas (86400000 ms)
 - **Longitud del username**: Máximo 50 caracteres
 
-## 🧪 Tests
+## Tests
 
 El proyecto incluye una suite completa de tests:
 
@@ -406,12 +448,12 @@ El proyecto incluye una suite completa de tests:
 
 **Cobertura de tests:**
 
-- ✅ Controllers (AuthController, MessageController, AdminController)
-- ✅ Services (AuthService, MessageService, RateLimitService, Platform Services)
-- ✅ Repositories (UserRepository, MessageRepository, MessageDeliveryRepository, DailyMessageCountRepository)
-- ✅ Utils (JwtUtils)
+- Controllers (AuthController, MessageController, AdminController)
+- Services (AuthService, MessageService, RateLimitService, Platform Services)
+- Repositories (UserRepository, MessageRepository, MessageDeliveryRepository, DailyMessageCountRepository)
+- Utils (JwtUtils)
 
-## 🛠️ Manejo de Errores
+## Manejo de Errores
 
 La API devuelve respuestas de error consistentes, incluyendo excepciones específicas para fallos en entregas de mensajes:
 
@@ -430,9 +472,9 @@ La API devuelve respuestas de error consistentes, incluyendo excepciones especí
 - `RateLimitExceededException`: Cuando se supera el límite diario de mensajes
 - `InvalidCredentialsException`: Credenciales inválidas en autenticación
 
-## 🚧 Estado del Proyecto
+## Estado del Proyecto
 
-✅ **Funcionalidades Completadas:**
+**Funcionalidades Completadas:**
 
 - Sistema de autenticación JWT
 - Envío a Telegram y Discord
@@ -448,8 +490,9 @@ La API devuelve respuestas de error consistentes, incluyendo excepciones especí
 - **Refactorización de Arquitectura de Repositorios**: Consultas optimizadas y centralizadas para mejor rendimiento y seguridad
 - **Validación Estricta de Entregas**: Mensajes solo se guardan si al menos una entrega es exitosa, previniendo desperdicio de rate limits
 - **Paginación Completa**: Implementación de paginación en endpoints de consulta con metadatos completos (total elementos, páginas, etc.)
+- **Sistema de Caché**: Implementación de Spring Cache con Caffeine para optimizar consultas frecuentes (usuarios, rate limits, conteos)
 
-## 💡 Posibles Mejoras Futuras
+## Posibles Mejoras Futuras
 
 - Integración con más plataformas (Slack, Microsoft Teams)
 - Sistema de notificaciones programadas
