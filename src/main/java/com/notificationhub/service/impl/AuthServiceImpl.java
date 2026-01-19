@@ -24,7 +24,6 @@ import java.time.LocalDateTime;
 
 @Service
 @Slf4j
-@Transactional
 public class AuthServiceImpl implements IAuthService {
 
     private final UserRepository userRepository;
@@ -45,6 +44,7 @@ public class AuthServiceImpl implements IAuthService {
         this.securityUtils = securityUtils;
     }
 
+    @Transactional
     public RegisterResponse register(RegisterRequest request) {
         log.info("Attempting to register user: {}", request.getUsername());
 

@@ -25,14 +25,14 @@ public interface MessageDeliveryRepository extends JpaRepository<MessageDelivery
     List<Message> findMessagesByFilters(MessageFilterCriteria criteria);
 
     @Query("""
-            SELECT DISTINCT md.message FROM MessageDelivery md
-            WHERE (:#{#criteria.user()} IS NULL OR md.message.user = :#{#criteria.user()})
-            AND (:#{#criteria.from()} IS NULL OR md.message.createdAt >= :#{#criteria.from()})
-            AND (:#{#criteria.to()} IS NULL OR md.message.createdAt <= :#{#criteria.to()})
+            SELECT DISTINCT m FROM Message m
+            JOIN m.deliveries md
+            WHERE (:#{#criteria.user()} IS NULL OR m.user = :#{#criteria.user()})
+            AND (:#{#criteria.from()} IS NULL OR m.createdAt >= :#{#criteria.from()})
+            AND (:#{#criteria.to()} IS NULL OR m.createdAt <= :#{#criteria.to()})
             AND (:#{#criteria.platform()} IS NULL OR md.platformType = :#{#criteria.platform()})
             AND (:#{#criteria.status()} IS NULL OR md.status = :#{#criteria.status()})
-            ORDER BY md.message.createdAt DESC
+            ORDER BY m.createdAt DESC
             """)
-    @EntityGraph(attributePaths = {"deliveries"})
     Page<Message> findMessagesByFilters(MessageFilterCriteria criteria, Pageable pageable);
 }

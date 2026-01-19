@@ -13,6 +13,9 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
+        connection.isolation: 2
+        cache.use_second_level_cache: false
+        cache.use_query_cache: false
 
 springdoc:
   api-docs:

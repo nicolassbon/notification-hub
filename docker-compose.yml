@@ -22,7 +22,9 @@ services:
       - notification-network
 
   app:
-    build: .
+    build:
+      context: .
+      network: host
     container_name: notification-hub-app
     restart: unless-stopped
     ports:

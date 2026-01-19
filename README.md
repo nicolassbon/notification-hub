@@ -15,7 +15,7 @@ Notification Hub es una API REST que centraliza el envío de notificaciones a m�
 - **Roles de Usuario**: Sistema de roles (USER, ADMIN) con endpoints administrativos
 - **Filtrado Avanzado**: Búsqueda de mensajes por estado, plataforma y rango de fechas
 - **Paginación**: Soporte completo de paginación en endpoints de consulta con parámetros configurables
-- **Optimización N+1**: Solución al problema N+1 query mediante `JOIN FETCH` para carga eficiente de relaciones
+- **Optimización de Queries**: Estrategia de carga lazy controlada para relaciones OneToMany en consultas paginadas
 - **Documentación Swagger**: API completamente documentada con OpenAPI 3.0
 - **Persistencia**: Base de datos MySQL/PostgreSQL con JPA/Hibernate
 - **Testing**: Suite completa de tests unitarios e integración
@@ -59,18 +59,18 @@ cd notification-hub
 Crea un archivo `.env` en la raíz del proyecto con las siguientes variables:
 
 ```env
-# Base de Datos MySQL (desarrollo)
-MYSQL_ROOT_PASSWORD=root
+# Database MySQL (Development)
+MYSQL_ROOT_PASSWORD=root_password
 MYSQL_DATABASE=notification_hub
 DB_USER=app_user
 DB_PASS=app_password
 
-# Base de Datos PostgreSQL (producción)
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
+# Database PostgreSQL (Production)
 POSTGRES_DB=notification_hub
+POSTGRES_HOST=localhost
 POSTGRES_USER=app_user
 POSTGRES_PASSWORD=app_password
+POSTGRES_PORT=5432
 
 # JWT
 JWT_SECRET=tu-secreto-seguro-de-al-menos-256-bits-para-jwt
@@ -82,7 +82,11 @@ TELEGRAM_CHAT_ID=tu_chat_id_por_defecto
 # Discord
 DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/tu_webhook_url
 
-# Perfil de Spring
+# Admin
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=admin_password
+
+# Spring Profile
 SPRING_ACTIVE_PROFILE=dev
 ```
 
@@ -286,19 +290,28 @@ Configurar las siguientes variables en el dashboard de Render:
 
 ## Optimizaciones de Rendimiento
 
-### Solución al Problema N+1 Query
+### Estrategia de Paginación con Carga Lazy Controlada
 
-El proyecto implementa `JOIN FETCH` en consultas JPA para evitar el problema N+1 al cargar relaciones:
+El proyecto implementa una estrategia optimizada para consultas paginadas de mensajes con sus entregas:
 
-**Problema:** Sin optimización, al cargar 100 mensajes con sus entregas (deliveries), se ejecutaban **101 queries** (1 para mensajes + 100 para cada delivery).
+**Problema:** Al usar `JOIN FETCH` con paginación en relaciones OneToMany, Hibernate carga TODOS los registros en memoria y pagina ahí, causando serios problemas de performance.
 
 **Solución implementada:**
 
-- Uso de consultas JPQL personalizadas con cláusula `JOIN FETCH`
-- Carga eager optimizada de las relaciones entre mensajes y entregas
-- Ordenamiento directo en la consulta para evitar queries adicionales
+- **Consultas sin FETCH**: Paginación eficiente en la base de datos (solo carga la página solicitada)
+- **Carga lazy selectiva**: Las relaciones (deliveries) se cargan solo para los mensajes de la página actual
+- **Evitación de N+1 controlado**: Máximo N+1 queries donde N es el tamaño de página (típicamente 20), no el total de registros
 
-**Resultado:** Ahora se ejecuta **1 sola query** con `LEFT JOIN`, mejorando el rendimiento significativamente.
+**Ejemplo:**
+```java
+// 1. Query paginada: trae solo 20 mensajes
+Page<Message> messages = repository.findMessagesByFilters(criteria, pageable);
+
+// 2. Carga lazy de deliveries solo para esos 20 mensajes
+messages.getContent().forEach(message -> message.getDeliveries().size());
+```
+
+**Resultado:** Para una página de 20 mensajes se ejecutan **21 queries** (1 para mensajes + 20 para deliveries), en lugar de cargar potencialmente miles de registros en memoria. Esto es escalable y eficiente incluso con millones de mensajes en la base de datos.
 
 ### Protección contra Race Conditions en Rate Limiting
 
@@ -323,23 +336,24 @@ Implementación de bloqueo pesimista y operaciones atómicas para evitar condici
 
 Reorganización de la lógica de consultas para mejorar el rendimiento y la mantenibilidad:
 
-**Problema:** Consultas de filtrado complejas dispersas en múltiples métodos, potencialmente causando N+1 queries y código duplicado.
+**Problema:** Consultas de filtrado complejas dispersas en múltiples métodos, incompatibilidad entre `JOIN FETCH` y paginación causando carga en memoria.
 
 **Solución implementada:**
 
 - **Centralización de Filtrado:** Lógica de filtrado avanzado (por estado, plataforma, fechas) movida a `MessageDeliveryRepository` usando un método único con criterios
 - **Eliminación de Métodos Redundantes:** Removidos métodos obsoletos en `MessageRepository` que duplicaban funcionalidad
-- **JOIN FETCH Optimizado:** Consultas con `LEFT JOIN FETCH` para cargar relaciones en una sola query, evitando problemas N+1
+- **Paginación Eficiente:** Queries sin FETCH para paginación correcta en DB, con carga lazy controlada posterior
 - **Arquitectura Más Segura:** Consultas parametrizadas que previenen inyección SQL
 
 **Beneficios:**
 
-- Mejora significativa en rendimiento de consultas con filtros
+- Mejora significativa en rendimiento de consultas con filtros y paginación
 - Reducción de código duplicado y mantenimiento simplificado
 - Prevención de vulnerabilidades de inyección SQL
+- Escalabilidad para grandes volúmenes de datos (paginación real en DB)
 - Suite de tests completa para validar el comportamiento
 
-**Testing:** Arquitectura refactorizada cubierta por tests unitarios exhaustivos que validan filtrado, ordenamiento y carga eficiente de relaciones.
+**Testing:** Arquitectura refactorizada cubierta por tests unitarios exhaustivos que validan filtrado, ordenamiento y paginación eficiente.
 
 ### Validación Estricta de Entregas de Mensajes
 
@@ -370,15 +384,16 @@ Implementación de paginación eficiente para manejar grandes volúmenes de dato
 **Características:**
 - **Paginación Spring Data JPA**: Uso de `Pageable` con `Page<T>` para consultas eficientes
 - **Ordenamiento Consistente**: Resultados ordenados por fecha de creación descendente
-- **Metadatos Completos**: Respuestas incluyen total de elementos, páginas disponibles, tamaño actual, etc.
+- **Metadatos Completos**: Respuestas usando `PagedModel` (vía `@EnableSpringDataWebSupport(pageSerializationMode = VIA_DTO)`) con estructura JSON estable
 - **Filtros Combinables**: Combinación de filtros (estado, plataforma, fechas) con paginación
 - **Límites de Rendimiento**: Tamaño de página por defecto 20, máximo recomendado 100
 
 **Beneficios:**
 - Reducción de carga de memoria y tiempo de respuesta
 - Navegación eficiente a través de grandes datasets
-- API consistente con estándares de paginación REST
-- Optimización automática de queries en base de datos
+- API consistente con estándares REST y estructura JSON estable
+- Optimización automática de queries en base de datos sin carga en memoria
+- Documentación Swagger mejorada con estructura predecible
 
 **Testing:** Paginación cubierta por tests exhaustivos que validan metadatos, navegación entre páginas, filtros combinados y límites de página.
 
@@ -388,10 +403,11 @@ Implementación de caché in-memory para optimizar consultas frecuentes y reduci
 
 **Estrategia de Caché:**
 
-- **Caché de Usuarios**: `UserRepository.findByUsername()` cachea búsquedas de usuarios por username (usado en autenticación)
 - **Caché de Rate Limits**: `RateLimitService.getRemainingMessages()` cachea el conteo de mensajes diarios por usuario y fecha
 - **Caché de Conteos**: `MessageRepository.countByUser()` cachea el total de mensajes enviados por usuario
-- **Invalidación Automática**: Uso de `@CacheEvict` en métodos que modifican datos (ej: `incrementCounter`)
+- **Invalidación Automática**: Uso de `@CacheEvict` en métodos que modifican datos (ej: `incrementCounter`, `evictMessageCount`)
+
+**Importante:** El cache NO se utiliza en `UserRepository.findByUsername()` para garantizar datos actualizados en procesos de autenticación y evitar problemas de consistencia durante el registro de usuarios.
 
 **Configuración:**
 

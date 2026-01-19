@@ -125,7 +125,13 @@ public class MessageServiceImpl implements MessageService {
                 .to(to)
                 .build();
 
-        return messageDeliveryRepository.findMessagesByFilters(criteria, pageable);
+        Page<Message> messages = messageDeliveryRepository.findMessagesByFilters(criteria, pageable);
+        
+        messages.getContent().forEach(message -> {
+            message.getDeliveries().size();
+        });
+        
+        return messages;
     }
 
     public List<MetricsResponse> getAllUserMetrics() {
