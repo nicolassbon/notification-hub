@@ -1,5 +1,0 @@
-spring:
-  application:
-    name: notification-hub
-  profiles:
-    active: ${SPRING_ACTIVE_PROFILE}

@@ -1,14 +1,41 @@
+# Compiled files
+*.class
+bin/
 target/
+out/
 
+# IntelliJ IDEA
 .idea/
 *.iml
 *.ipr
 *.iws
 
+# Environment & Config
 .env
 .env.local
+application-*.properties
+!application.properties
+!application.yml
 
+# SonarCloud
+.sonar/
+.scannerwork/
+
+# Logs
 *.log
+logs/
 
+# OS
 .DS_Store
 Thumbs.db
+
+# Maven
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+pom.xml.tag
+pom.xml.releaseBackup
+
+# Temp
+*.tmp
+*.swp
+*~
