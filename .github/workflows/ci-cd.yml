@@ -128,7 +128,7 @@ jobs:
           path: ./target
 
       - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@20839255a68735520e7f7243cb8d2c4997092978 # v3.0.1
+        uses: azure/webapps-deploy@0d171df6ffe59a6239ff3c7043c1c85847c3b741 # v2
         with:
           app-name: notification-hub-api
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
