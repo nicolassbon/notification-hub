@@ -182,6 +182,16 @@
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<version>${jacoco.version}</version>
+				<configuration>
+					<excludes>
+						<exclude>com/notificationhub/dto/**</exclude>
+						<exclude>com/notificationhub/entity/**</exclude>
+						<exclude>com/notificationhub/enums/**</exclude>
+						<exclude>com/notificationhub/config/**</exclude>
+						<exclude>com/notificationhub/mapper/**</exclude>
+						<exclude>com/notificationhub/NotificationHubApplication.class</exclude>
+					</excludes>
+				</configuration>
 				<executions>
 					<execution>
 						<id>jacoco-initialize</id>
