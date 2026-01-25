@@ -1,4 +1,4 @@
-package com.notificationhub.security.jwt;
+package com.notificationhub.security.filter;
 
 import com.notificationhub.security.service.CustomUserDetailsService;
 import com.notificationhub.utils.JwtUtils;

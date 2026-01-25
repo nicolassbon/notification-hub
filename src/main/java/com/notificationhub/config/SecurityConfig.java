@@ -2,7 +2,7 @@ package com.notificationhub.config;
 
 import com.notificationhub.security.service.CustomUserDetailsService;
 import com.notificationhub.security.handlers.JwtAccessDeniedHandler;
-import com.notificationhub.security.jwt.JwtAuthFilter;
+import com.notificationhub.security.filter.JwtAuthFilter;
 import com.notificationhub.security.handlers.JwtAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
