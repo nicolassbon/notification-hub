@@ -1,4 +1,4 @@
-package com.notificationhub.service;
+package com.notificationhub.service.impl;
 
 import com.notificationhub.dto.response.AuthResponse;
 import com.notificationhub.dto.request.LoginRequest;
@@ -8,7 +8,6 @@ import com.notificationhub.entity.User;
 import com.notificationhub.enums.Role;
 import com.notificationhub.exception.custom.InvalidCredentialsException;
 import com.notificationhub.repository.UserRepository;
-import com.notificationhub.service.impl.AuthServiceImpl;
 import com.notificationhub.utils.JwtUtils;
 import com.notificationhub.utils.SecurityUtils;
 import org.junit.jupiter.api.BeforeEach;

@@ -1,11 +1,10 @@
-package com.notificationhub.service;
+package com.notificationhub.service.impl;
 
 import com.notificationhub.entity.DailyMessageCount;
 import com.notificationhub.entity.User;
 import com.notificationhub.enums.Role;
 import com.notificationhub.exception.custom.RateLimitExceededException;
 import com.notificationhub.repository.DailyMessageCountRepository;
-import com.notificationhub.service.impl.RateLimitServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

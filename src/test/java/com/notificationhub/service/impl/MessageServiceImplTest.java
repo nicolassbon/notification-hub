@@ -1,4 +1,4 @@
-package com.notificationhub.service;
+package com.notificationhub.service.impl;
 
 import com.notificationhub.dto.request.MessageRequest;
 import com.notificationhub.dto.request.DestinationRequest;
@@ -13,7 +13,7 @@ import com.notificationhub.repository.DailyMessageCountRepository;
 import com.notificationhub.repository.MessageDeliveryRepository;
 import com.notificationhub.repository.MessageRepository;
 import com.notificationhub.repository.UserRepository;
-import com.notificationhub.service.impl.MessageServiceImpl;
+import com.notificationhub.service.RateLimitService;
 import com.notificationhub.service.platform.PlatformService;
 import com.notificationhub.service.platform.PlatformServiceFactory;
 import com.notificationhub.utils.SecurityUtils;
