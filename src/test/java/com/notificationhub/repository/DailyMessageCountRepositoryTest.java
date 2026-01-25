@@ -181,7 +181,7 @@ public class DailyMessageCountRepositoryTest {
                 .count(7)
                 .build();
 
-        DailyMessageCount savedCount = dailyMessageCountRepository.save(newCount);
+        dailyMessageCountRepository.save(newCount);
         entityManager.flush();
         entityManager.clear();
 
@@ -198,7 +198,7 @@ public class DailyMessageCountRepositoryTest {
         LocalDate today = LocalDate.now();
         todayCount.setCount(15);
 
-        DailyMessageCount updatedCount = dailyMessageCountRepository.save(todayCount);
+        dailyMessageCountRepository.save(todayCount);
         entityManager.flush();
         entityManager.clear();
 

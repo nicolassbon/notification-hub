@@ -11,6 +11,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -118,36 +120,16 @@ public class AuthControllerTest {
         verify(authService).login(any(LoginRequest.class));
     }
 
-    @Test
-    @DisplayName("Should return 400 for register request with empty username")
-    void registerEmptyUsernameReturnsBadRequest() throws Exception {
-        RegisterRequest invalidRequest = new RegisterRequest("", "password123");
+    @ParameterizedTest(name = "{index}: {0}")
+    @CsvSource({
+            "Empty username, '', password123",
+            "Null username, , password123",
+            "Short password, testuser, 123"
+    })
+    @DisplayName("Should return 400 for invalid register requests")
+    void registerInvalidRequestReturnsBadRequest(String description, String username, String password) throws Exception {
 
-        mockMvc.perform(post(API_REGISTER)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidRequest)))
-                .andExpect(status().isBadRequest());
-
-        verify(authService, never()).register(any(RegisterRequest.class));
-    }
-
-    @Test
-    @DisplayName("Should return 400 for register request with null username")
-    void registerNullUsernameReturnsBadRequest() throws Exception {
-        RegisterRequest invalidRequest = new RegisterRequest(null, "password123");
-
-        mockMvc.perform(post(API_REGISTER)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidRequest)))
-                .andExpect(status().isBadRequest());
-
-        verify(authService, never()).register(any(RegisterRequest.class));
-    }
-
-    @Test
-    @DisplayName("Should return 400 for register request with short password")
-    void registerShortPasswordReturnsBadRequest() throws Exception {
-        RegisterRequest invalidRequest = new RegisterRequest("testuser", "123");
+        RegisterRequest invalidRequest = new RegisterRequest(username, password);
 
         mockMvc.perform(post(API_REGISTER)
                         .contentType(MediaType.APPLICATION_JSON)

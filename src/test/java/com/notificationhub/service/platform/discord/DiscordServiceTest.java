@@ -5,6 +5,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -21,12 +24,11 @@ public class DiscordServiceTest {
 
     private DiscordService discordService;
 
-    private final String webhookUrl = "https://discord.com/api/webhooks/123456789/abcdefghijklmnop";
-
     @BeforeEach
     void setUp() {
         when(webClientBuilder.build()).thenReturn(null);
 
+        String webhookUrl = "https://discord.com/api/webhooks/123456789/abcdefghijklmnop";
         discordService = new DiscordService(webClientBuilder, webhookUrl);
     }
 
@@ -42,24 +44,14 @@ public class DiscordServiceTest {
         assertTrue(discordService.isConfigured());
     }
 
-    @Test
-    @DisplayName("Should not be configured when webhook URL is empty")
-    void isConfiguredReturnsFalseWhenUrlEmpty() {
-        DiscordService unconfiguredService = new DiscordService(webClientBuilder, "");
-        assertFalse(unconfiguredService.isConfigured());
-    }
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = "http://invalid-url.com")
+    @DisplayName("Should return false when webhook URL is not configured")
+    void isConfiguredReturnsFalse(String url) {
 
-    @Test
-    @DisplayName("Should not be configured when webhook URL is null")
-    void isConfiguredReturnsFalseWhenUrlNull() {
-        DiscordService unconfiguredService = new DiscordService(webClientBuilder, null);
-        assertFalse(unconfiguredService.isConfigured());
-    }
+        DiscordService unconfiguredService = new DiscordService(webClientBuilder, url);
 
-    @Test
-    @DisplayName("Should not be configured when webhook URL is invalid format")
-    void isConfiguredReturnsFalseWhenUrlInvalid() {
-        DiscordService unconfiguredService = new DiscordService(webClientBuilder, "http://invalid-url.com");
         assertFalse(unconfiguredService.isConfigured());
     }
 

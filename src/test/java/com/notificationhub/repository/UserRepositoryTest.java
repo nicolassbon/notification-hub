@@ -5,6 +5,8 @@ import com.notificationhub.enums.Role;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
@@ -65,20 +67,14 @@ public class UserRepositoryTest {
         assertEquals(Role.USER, foundUser.get().getRole());
     }
 
-    @Test
-    @DisplayName("Should not find user by username when user is deleted")
-    void findByUsernameWhenUserIsDeletedReturnsEmpty() {
-        Optional<User> foundUser = userRepository.findByUsername("deleteduser");
+    @ParameterizedTest
+    @ValueSource(strings = { "deleteduser", "nonexistent", "TESTUSER" })
+    @DisplayName("Should return empty for invalid usernames")
+    void findByUsernameReturnsEmpty(String username) {
 
-        assertFalse(foundUser.isPresent());
-    }
+        Optional<User> foundUser = userRepository.findByUsername(username);
 
-    @Test
-    @DisplayName("Should not find user by username when user does not exist")
-    void findByUsernameWhenUserDoesNotExistReturnsEmpty() {
-        Optional<User> foundUser = userRepository.findByUsername("nonexistent");
-
-        assertFalse(foundUser.isPresent());
+        assertFalse(foundUser.isPresent(), "User should not be found: " + username);
     }
 
     @Test
@@ -183,14 +179,6 @@ public class UserRepositoryTest {
 
         assertTrue(adminResult.isPresent());
         assertEquals(Role.ADMIN, adminResult.get().getRole());
-    }
-
-    @Test
-    @DisplayName("Should handle case sensitivity in usernames")
-    void findByUsernameWithDifferentCaseReturnsEmpty() {
-        Optional<User> foundUser = userRepository.findByUsername("TESTUSER");
-
-        assertFalse(foundUser.isPresent());
     }
 
     @Test
