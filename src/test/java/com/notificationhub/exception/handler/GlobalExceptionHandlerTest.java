@@ -52,6 +52,7 @@ public class GlobalExceptionHandlerTest {
 
         @GetMapping("/test/type-mismatch/{id}")
         public void handleTypeMismatch(@PathVariable Long id) {
+            // Empty method - used only to test MethodArgumentTypeMismatchException
         }
 
         @GetMapping("/test/datetime-parse")
@@ -61,14 +62,17 @@ public class GlobalExceptionHandlerTest {
 
         @PostMapping("/test/validation")
         public void handleValidation(@RequestBody @Valid LoginRequest request) {
+            // Empty method - used only to test MethodArgumentNotValidException
         }
 
         @PostMapping(value = "/test/media-type", consumes = "application/xml")
         public void handleMediaType() {
+            // Empty method - used only to test HttpMediaTypeNotSupportedException
         }
 
         @GetMapping("/test/method-not-allowed")
         public void onlyGet() {
+            // Empty method - used only to test HttpRequestMethodNotSupportedException
         }
 
         @GetMapping("/test/generic-exception")
@@ -192,7 +196,7 @@ public class GlobalExceptionHandlerTest {
     @Test
     @DisplayName("Should handle HttpRequestMethodNotSupportedException and return 405 METHOD_NOT_ALLOWED")
     void shouldHandleHttpRequestMethodNotSupportedException() throws Exception {
-        mockMvc.perform(post("/test/method-not-allowed") // Envía POST pero solo acepta GET
+        mockMvc.perform(post("/test/method-not-allowed")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isMethodNotAllowed())
                 .andExpect(jsonPath("$.status").value(405))
