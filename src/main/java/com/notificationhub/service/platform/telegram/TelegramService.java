@@ -51,7 +51,7 @@ public class TelegramService implements PlatformService {
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("chat_id", chatId);
 
-            String signedContent = String.format("*From: %s*\n\n%s", username, content);
+            String signedContent = String.format("**From: %s**\n\n%s", username, content);
             requestBody.put("text", signedContent);
             requestBody.put("parse_mode", "markdown");
 
