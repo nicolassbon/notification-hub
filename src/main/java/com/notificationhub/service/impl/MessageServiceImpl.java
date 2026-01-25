@@ -99,7 +99,12 @@ public class MessageServiceImpl implements MessageService {
 
     @CacheEvict(value = "messageCounts", key = "#user.id")
     public void evictMessageCount(User user) {
-
+        /*
+        Evicts the cached message count for the specified user. This method is called
+        after a new message is successfully sent to ensure that the cached count remains
+        accurate. By evicting the cache entry, the next time the message count is requested
+        for this user, it will be recalculated from the database, reflecting the latest count.
+         */
     }
 
     public Page<Message> getAllMessages(Pageable pageable) {

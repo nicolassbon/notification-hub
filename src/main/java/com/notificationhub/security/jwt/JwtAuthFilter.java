@@ -22,6 +22,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtils jwtUtils;
     private final CustomUserDetailsService userDetailsService;
+    private final static String AUTH_ERROR_ATTR = "auth.error";
 
     public JwtAuthFilter(JwtUtils jwtUtils, CustomUserDetailsService userDetailsService) {
         this.jwtUtils = jwtUtils;
@@ -38,7 +39,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             if (jwt != null) {
                 if (!jwtUtils.validateToken(jwt)) {
                     // Entry Point: Token inválido - 401
-                    request.setAttribute("auth.error", "INVALID_TOKEN");
+                    request.setAttribute(AUTH_ERROR_ATTR, "INVALID_TOKEN");
                 } else {
                     String username = jwtUtils.extractUsername(jwt);
                     UserDetails userDetails = userDetailsService.loadUserByUsername(username);
@@ -52,9 +53,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 }
             }
         } catch (UsernameNotFoundException e) {
-            request.setAttribute("auth.error", "USER_NOT_FOUND");
+            request.setAttribute(AUTH_ERROR_ATTR, "USER_NOT_FOUND");
         } catch (Exception e) {
-            request.setAttribute("auth.error", "AUTH_FAILED");
+            request.setAttribute(AUTH_ERROR_ATTR, "AUTH_FAILED");
         }
 
         filterChain.doFilter(request, response);
