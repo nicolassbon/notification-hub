@@ -45,10 +45,6 @@ public class DailyMessageCount {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public void increment() {
-        this.count++;
-    }
-
     public boolean hasReachedLimit(int dailyLimit) {
         return this.count >= dailyLimit;
     }
