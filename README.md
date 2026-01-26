@@ -2,7 +2,7 @@
 
 Sistema de notificaciones multi-plataforma construido con Spring Boot que permite enviar mensajes a través de Telegram y Discord de manera unificada. Incluye autenticación JWT, limitación de tasa (rate limiting) y gestión completa de mensajes.
 
-> **Nota**: Este proyecto fue desarrollado como parte de una prueba técnica. Estuvo desplegado temporalmente en Render con PostgreSQL para demostrar capacidades de deployment en producción. Actualmente el deployment ha expirado, pero el proyecto puede ejecutarse localmente siguiendo las instrucciones más abajo.
+> **Nota**: Este proyecto fue desarrollado como parte de challenge backend técnico. Actualmente está desplegado en producción en **[Railway](https://notification-hub-production.up.railway.app/swagger-ui/index.html)**. La arquitectura también es totalmente compatible con **Microsoft Azure** (App Service).
 
 ## Descripción del Proyecto
 
@@ -18,8 +18,16 @@ Notification Hub es una API REST que centraliza el envío de notificaciones a m�
 - **Optimización de Queries**: Estrategia de carga lazy controlada para relaciones OneToMany en consultas paginadas
 - **Documentación Swagger**: API completamente documentada con OpenAPI 3.0
 - **Persistencia**: Base de datos MySQL/PostgreSQL con JPA/Hibernate
-- **Testing**: Suite completa de tests unitarios e integración
-- **Deployment Ready**: Preparado para deployment con Docker y configuración para Render
+- **Testing**: Suite completa de tests unitarios e integración incluyendo:
+  - Controllers, Services, Repositories y Utils
+  - Security handlers (authentication & authorization)
+  - Platform services (Telegram, Discord)
+  - Cobertura de código y quality gates con SonarCloud
+- **Deployment Ready**: Estrategia Multi-Cloud soportada:
+  - Railway: Entorno de producción activo (PostgreSQL)
+  - Azure Web Apps: Configuración alternativa lista para despliegue (App Service Linux)
+  - Docker: Contenedores portables para cualquier entorno
+  - GitHub Actions: Pipelines de CI/CD configurables para ambos entornos
 
 ## Tecnologías
 
@@ -36,7 +44,9 @@ Notification Hub es una API REST que centraliza el envío de notificaciones a m�
 - **Docker & Docker Compose** - Containerización
 - **H2 Database** - Base de datos en memoria para tests
 - **JUnit 5 & Mockito** - Testing
-- **Render** - Plataforma de deployment (configurado)
+- **Railway** - Plataforma de deployment (producción)
+- **GitHub Actions** - CI/CD automatizado con testing, SonarCloud analysis y deploy
+- **SonarCloud** - Análisis estático de código y quality gates
 
 ## Requisitos Previos
 
@@ -173,8 +183,13 @@ mvnw.cmd spring-boot:run
 
 ## Documentación de la API
 
-### Swagger UI (Ejecución Local)
+### Swagger UI
 
+#### Producción
+- **Swagger UI**: https://notification-hub-production.up.railway.app/swagger-ui/index.html
+- **OpenAPI JSON**: https://notification-hub-production.up.railway.app/v3/api-docs
+
+#### Ejecución Local
 Una vez ejecutada la aplicación localmente, la documentación Swagger está disponible en:
 
 - **Swagger UI**: http://localhost:8080/swagger-ui.html
@@ -252,31 +267,62 @@ notification-hub/
 └── .env                             # Variables de entorno (no versionado)
 ```
 
-## Deployment en Render
+## Deployment
 
-La aplicación está configurada para desplegarse en Render. Para replicar el deployment:
+### Producción (Railway)
 
-### Configuración en Render
+La aplicación está desplegada en producción en **[Railway](https://notification-hub-production.up.railway.app/swagger-ui/index.html)** con CI/CD automatizado vía GitHub Actions.
 
-1. **Build Command**: `./mvnw clean package -DskipTests`
-2. **Start Command**: `java -jar target/notification-hub-0.0.1-SNAPSHOT.jar`
-3. **Environment**: Java 21
-4. **Base de datos**: PostgreSQL (managed database)
+## Deployment
 
-### Variables de Entorno en Render
+### Producción (Railway - Activo)
 
-Configurar las siguientes variables en el dashboard de Render:
+La aplicación opera actualmente en el entorno de Railway, aprovechando su integración nativa con GitHub para CI/CD.
 
+- **URL Swagger**: [Ver Documentación en Vivo](https://notification-hub-production.up.railway.app/swagger-ui/index.html)
+- **Base de Datos**: PostgreSQL Managed
+- **Pipeline**: Automático tras push a `main`
+
+### Alternativa (Microsoft Azure)
+
+El proyecto incluye la configuración de infraestructura necesaria para operar en **Azure App Service (Linux Plan)**. Aunque actualmente no es el entorno activo por defecto, el repositorio está preparado para migrar o replicar el servicio en Azure instantáneamente.
+
+**Configuración Soportada:**
+- **Servicio**: Azure App Service (Linux)
+- **Stack**: Java 21 (Embedded Web Server)
+- **Base de Datos**: Azure Database for PostgreSQL o MySQL
+- **CI/CD**: El archivo `.github/workflows` incluye un *job* dedicado (`deploy-azure`) que utiliza `azure/webapps-deploy@v3` para publicaciones automatizadas.
+
+**Pasos para activar en Azure:**
+1. Crear un App Service en Azure Portal (Runtime: Java 21).
+2. Configurar las variables de entorno en "Configuration".
+3. Obtener el *Publish Profile* y guardarlo en los Secrets de GitHub (`AZURE_WEBAPP_PUBLISH_PROFILE`).
+4. Habilitar el paso de deploy en el workflow de GitHub Actions.
+
+### Variables de Entorno (Producción)
+
+Configurar las siguientes variables en el platform de deployment:
+
+#### Railway
 - `SPRING_PROFILES_ACTIVE=prod`
-- `POSTGRES_HOST` (auto-generado por Render)
-- `POSTGRES_PORT` (auto-generado por Render)
-- `POSTGRES_DB` (auto-generado por Render)
-- `POSTGRES_USER` (auto-generado por Render)
-- `POSTGRES_PASSWORD` (auto-generado por Render)
+- `DATABASE_URL`
 - `JWT_SECRET`
 - `TELEGRAM_BOT_TOKEN`
 - `TELEGRAM_CHAT_ID`
 - `DISCORD_WEBHOOK_URL`
+
+#### Azure (Alternativo)
+- `SPRING_PROFILES_ACTIVE=prod`
+- `POSTGRES_HOST`
+- `POSTGRES_PORT`
+- `POSTGRES_DB`
+- `POSTGRES_USER`
+- `POSTGRES_PASSWORD`
+- `JWT_SECRET`
+- `TELEGRAM_BOT_TOKEN`
+- `TELEGRAM_CHAT_ID`
+- `DISCORD_WEBHOOK_URL`
+- `WEBSITES_PORT=8080`
 
 ## Seguridad
 
@@ -448,7 +494,7 @@ int remaining3 = rateLimitService.getRemainingMessages(user); // DB query again
 
 ## Tests
 
-El proyecto incluye una suite completa de tests:
+El proyecto incluye una suite completa de tests con cobertura integral:
 
 ```bash
 # Ejecutar todos los tests
@@ -462,12 +508,40 @@ El proyecto incluye una suite completa de tests:
 ./mvnw verify
 ```
 
-**Cobertura de tests:**
+### Cobertura de Tests
 
-- Controllers (AuthController, MessageController, AdminController)
-- Services (AuthService, MessageService, RateLimitService, Platform Services)
-- Repositories (UserRepository, MessageRepository, MessageDeliveryRepository, DailyMessageCountRepository)
-- Utils (JwtUtils)
+**Controllers:**
+- AuthControllerTest - Registro y login de usuarios
+- MessageControllerTest - Envío y consulta de mensajes  
+- AdminControllerTest - Endpoints administrativos
+
+**Services:**
+- AuthServiceImplTest - Lógica de autenticación
+- MessageServiceImplTest - Procesamiento de mensajes y rate limiting
+- RateLimitServiceImplTest - Control de límites diarios
+- DiscordServiceTest - Integración con Discord API
+- TelegramServiceTest - Integración con Telegram API
+
+**Repositories:**
+- UserRepositoryTest - Gestión de usuarios
+- MessageRepositoryTest - Persistencia de mensajes
+- MessageDeliveryRepositoryTest - Estados de entrega
+- DailyMessageCountRepositoryTest - Contadores diarios
+
+**Security Handlers:**
+- JwtAccessDeniedHandlerTest - Manejo de acceso denegado (403)
+- JwtAuthenticationEntryPointTest - Manejo de autenticación fallida (401)
+
+**Utils:**
+- JwtUtilsTest - Generación y validación de tokens JWT
+
+### CI/CD Testing
+
+Los tests se ejecutan automáticamente en el pipeline de CI/CD:
+- **GitHub Actions**: Tests en Ubuntu con MySQL 8.0
+- **SonarCloud**: Quality gates y análisis estático
+- **Coverage**: Reportes de cobertura automatizados
+- **Environment Variables**: Configuración segura para testing
 
 ## Manejo de Errores
 
@@ -507,6 +581,11 @@ La API devuelve respuestas de error consistentes, incluyendo excepciones especí
 - **Validación Estricta de Entregas**: Mensajes solo se guardan si al menos una entrega es exitosa, previniendo desperdicio de rate limits
 - **Paginación Completa**: Implementación de paginación en endpoints de consulta con metadatos completos (total elementos, páginas, etc.)
 - **Sistema de Caché**: Implementación de Spring Cache con Caffeine para optimizar consultas frecuentes (usuarios, rate limits, conteos)
+- **Testing de Seguridad**: Tests unitarios completos para handlers de autenticación y autorización JWT
+- **CI/CD Pipeline**: Integración con GitHub Actions, SonarCloud y Railway deployment
+- **Producción Activa**: Despliegue en Railway con URL funcional y pipeline automatizado
+- **Quality Gates**: SonarCloud integration para análisis estático de código
+- **Testing Expandido**: Cobertura completa incluyendo security handlers y edge cases
 
 ## Posibles Mejoras Futuras
 
@@ -515,3 +594,7 @@ La API devuelve respuestas de error consistentes, incluyendo excepciones especí
 - Dashboard web para administración
 - Métricas en tiempo real
 - WebSockets para notificaciones en vivo
+- Monitoring avanzado con Prometheus/Grafana
+- Rate limiting configurable por usuario
+- Sistema de plantillas de mensajes
+- Análisis de sentimiento en mensajes
