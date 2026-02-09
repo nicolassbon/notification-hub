@@ -4,7 +4,6 @@ import com.notificationhub.dto.response.ErrorResponse;
 import com.notificationhub.exception.custom.InvalidCredentialsException;
 import com.notificationhub.exception.custom.MessageDeliveryException;
 import com.notificationhub.exception.custom.RateLimitExceededException;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.http.HttpStatus;
@@ -16,6 +15,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
@@ -125,6 +125,16 @@ public class GlobalExceptionHandler {
                         HttpStatus.BAD_REQUEST,
                         BAD_REQUEST_ERROR,
                         "Malformed JSON request",
+                        null));
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoResourceFound() {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(buildErrorResponse(
+                        HttpStatus.NOT_FOUND,
+                        "Not Found",
+                        "The requested resource was not found",
                         null));
     }
 
