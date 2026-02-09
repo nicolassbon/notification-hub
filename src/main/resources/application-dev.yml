@@ -47,3 +47,13 @@ logging:
     root: INFO
     org.springframework.security: DEBUG
     com.notificationhub: DEBUG
+
+
+management:
+  endpoint:
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        include: health

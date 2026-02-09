@@ -54,6 +54,23 @@ admin:
 rate-limit:
   daily-messages: 100
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: never  # No exponer detalles sensibles en producción
+      probes:
+        enabled: true  # Habilita liveness y readiness probes para Railway
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+
 logging:
   level:
     root: INFO
