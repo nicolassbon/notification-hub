@@ -31,3 +31,7 @@ pom.xml.releaseBackup
 *.tmp
 *.swp
 *~
+
+.classpath
+.project
+.factorypath
