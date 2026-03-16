@@ -2,8 +2,6 @@
 
 Sistema de notificaciones multi-plataforma construido con Spring Boot que permite enviar mensajes a través de Telegram y Discord de manera unificada. Incluye autenticación JWT, limitación de tasa (rate limiting) y gestión completa de mensajes.
 
-> **Nota**: Este proyecto fue desarrollado como parte de challenge backend técnico. Actualmente está desplegado en producción en **[Railway](https://notification-hub-production.up.railway.app/swagger-ui/index.html)**. La arquitectura también es totalmente compatible con **Microsoft Azure** (App Service).
-
 ## Descripción del Proyecto
 
 Notification Hub es una API REST que centraliza el envío de notificaciones a múltiples plataformas (Telegram y Discord) con las siguientes características principales:
@@ -185,10 +183,6 @@ mvnw.cmd spring-boot:run
 
 ### Swagger UI
 
-#### Producción
-- **Swagger UI**: https://notification-hub-production.up.railway.app/swagger-ui/index.html
-- **OpenAPI JSON**: https://notification-hub-production.up.railway.app/v3/api-docs
-
 #### Ejecución Local
 Una vez ejecutada la aplicación localmente, la documentación Swagger está disponible en:
 
@@ -266,63 +260,6 @@ notification-hub/
 ├── pom.xml                          # Dependencias Maven
 └── .env                             # Variables de entorno (no versionado)
 ```
-
-## Deployment
-
-### Producción (Railway)
-
-La aplicación está desplegada en producción en **[Railway](https://notification-hub-production.up.railway.app/swagger-ui/index.html)** con CI/CD automatizado vía GitHub Actions.
-
-## Deployment
-
-### Producción (Railway - Activo)
-
-La aplicación opera actualmente en el entorno de Railway, aprovechando su integración nativa con GitHub para CI/CD.
-
-- **URL Swagger**: [Ver Documentación en Vivo](https://notification-hub-production.up.railway.app/swagger-ui/index.html)
-- **Base de Datos**: PostgreSQL Managed
-- **Pipeline**: Automático tras push a `main`
-
-### Alternativa (Microsoft Azure)
-
-El proyecto incluye la configuración de infraestructura necesaria para operar en **Azure App Service (Linux Plan)**. Aunque actualmente no es el entorno activo por defecto, el repositorio está preparado para migrar o replicar el servicio en Azure instantáneamente.
-
-**Configuración Soportada:**
-- **Servicio**: Azure App Service (Linux)
-- **Stack**: Java 21 (Embedded Web Server)
-- **Base de Datos**: Azure Database for PostgreSQL o MySQL
-- **CI/CD**: El archivo `.github/workflows` incluye un *job* dedicado (`deploy-azure`) que utiliza `azure/webapps-deploy@v3` para publicaciones automatizadas.
-
-**Pasos para activar en Azure:**
-1. Crear un App Service en Azure Portal (Runtime: Java 21).
-2. Configurar las variables de entorno en "Configuration".
-3. Obtener el *Publish Profile* y guardarlo en los Secrets de GitHub (`AZURE_WEBAPP_PUBLISH_PROFILE`).
-4. Habilitar el paso de deploy en el workflow de GitHub Actions.
-
-### Variables de Entorno (Producción)
-
-Configurar las siguientes variables en el platform de deployment:
-
-#### Railway
-- `SPRING_PROFILES_ACTIVE=prod`
-- `DATABASE_URL`
-- `JWT_SECRET`
-- `TELEGRAM_BOT_TOKEN`
-- `TELEGRAM_CHAT_ID`
-- `DISCORD_WEBHOOK_URL`
-
-#### Azure (Alternativo)
-- `SPRING_PROFILES_ACTIVE=prod`
-- `POSTGRES_HOST`
-- `POSTGRES_PORT`
-- `POSTGRES_DB`
-- `POSTGRES_USER`
-- `POSTGRES_PASSWORD`
-- `JWT_SECRET`
-- `TELEGRAM_BOT_TOKEN`
-- `TELEGRAM_CHAT_ID`
-- `DISCORD_WEBHOOK_URL`
-- `WEBSITES_PORT=8080`
 
 ## Seguridad
 
@@ -586,15 +523,3 @@ La API devuelve respuestas de error consistentes, incluyendo excepciones especí
 - **Producción Activa**: Despliegue en Railway con URL funcional y pipeline automatizado
 - **Quality Gates**: SonarCloud integration para análisis estático de código
 - **Testing Expandido**: Cobertura completa incluyendo security handlers y edge cases
-
-## Posibles Mejoras Futuras
-
-- Integración con más plataformas (Slack, Microsoft Teams)
-- Sistema de notificaciones programadas
-- Dashboard web para administración
-- Métricas en tiempo real
-- WebSockets para notificaciones en vivo
-- Monitoring avanzado con Prometheus/Grafana
-- Rate limiting configurable por usuario
-- Sistema de plantillas de mensajes
-- Análisis de sentimiento en mensajes
