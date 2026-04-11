@@ -35,3 +35,7 @@ pom.xml.releaseBackup
 .classpath
 .project
 .factorypath
+
+.vscode/
+.settings/
+.atl/
