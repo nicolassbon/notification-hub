@@ -1,73 +1,27 @@
-# AGENTS.md - Coding Guidelines for Notification Hub
+# Notification Hub - Agent Instructions
 
-## Build/Test Commands
-- **Run all tests**: `./mvnw test`
-- **Run single test**: `./mvnw test -Dtest=ClassName` (e.g., `./mvnw test -Dtest=AuthControllerTest`)
-- **Build JAR**: `./mvnw clean package -DskipTests`
-- **Run application**: `./mvnw spring-boot:run`
-- **Run with coverage**: `./mvnw verify`
+## Repository Stack
+- **Language & Framework**: Java 21, Spring Boot 3.5+, Maven
+- **Database**: PostgreSQL (Production/Docker) / MySQL 8.0 (CI). Unit/Integration tests use **H2** in-memory database.
+- **Architecture**: Classic layered (`controller` -> `service` -> `repository`), utilizing `dto`, `entity`, and `mapper` packages.
+- **Tooling**: Uses **Lombok** and **MapStruct** for DTO mappings.
 
-## Code Style Guidelines
+## Execution & Testing
+Always use the Maven Wrapper (`./mvnw` on Linux/Mac, `mvnw.cmd` on Windows):
 
-### Imports & Organization
-- Organize imports alphabetically
-- Use fully qualified class names for DTOs and entities
-- Separate static imports with blank line
+- **Run Local Server**: `./mvnw spring-boot:run`
+- **Run All Tests**: `./mvnw test`
+- **Run Specific Test**: `./mvnw test -Dtest=ClassNameTest`
+- **Verify & Coverage**: `./mvnw verify` (Generates JaCoCo report at `target/site/jacoco/jacoco.xml`)
+- **Package (skip tests)**: `./mvnw clean package -DskipTests`
+- **Run with Docker**: `docker-compose up -d` (runs the app and a PostgreSQL container)
 
-### Dependencies & Injection
-- Use constructor injection exclusively
-- Avoid field injection (@Autowired)
-- Order constructor parameters alphabetically
+## Architecture & Code Constraints
+- **Coverage Exclusions**: JaCoCo ignores `com/notificationhub/dto/**`, `com/notificationhub/entity/**`, `com/notificationhub/enums/**`, `com/notificationhub/config/**`, and `com/notificationhub/mapper/**`. Do not write trivial tests just to cover simple data classes.
+- **Message Delivery Transactionality**: The system enforces that messages are *only* saved to the database if at least one delivery attempt (Telegram/Discord) succeeds. Preserve this strict rule during any refactoring.
+- **Pagination & N+1**: The project explicitly optimizes lazy loading for `OneToMany` relationships in paginated endpoints. Be highly vigilant against introducing N+1 query bugs when modifying JPA Repositories or Entities. Use queries without `FETCH` for pagination, then lazy-load selectively.
+- **Rate Limiting**: Daily message limits are enforced and cached using Spring Cache (Caffeine). Ensure any new notification-sending endpoints integrate with existing rate-limiting mechanisms and pessimistic locking to avoid race conditions.
 
-### Annotations & Lombok
-- Use Lombok annotations: `@Getter`, `@Setter`, `@NoArgsConstructor`, `@AllArgsConstructor`, `@Builder`, `@Slf4j`
-- Apply `@Builder.Default` for collections in entities
-- Use `@ToString.Exclude` for lazy-loaded relationships
-
-### Entities & JPA
-- Use `@Entity` with proper table naming (snake_case)
-- Implement custom `equals()` and `hashCode()` using ID field
-- Use `@PrePersist` for audit fields (createdAt)
-- Define relationships with proper cascade and fetch types
-
-### Services & Business Logic
-- Use `@Service` and `@Transactional` at class level
-- Implement interfaces for all services
-- Use meaningful logging with parameterized messages
-- Handle exceptions with custom exception classes
-
-### Controllers & REST
-- Use `@RestController` with proper request mapping
-- Include comprehensive Swagger documentation
-- Return `ResponseEntity<DTO>` for responses
-- Use `@Valid` for request validation
-
-### DTOs & Mapping
-- Use MapStruct for entity-DTO conversion
-- Separate request/response DTOs
-- Include validation annotations (@NotBlank, @Size, etc.)
-
-### Testing
-- Use JUnit 5 with Mockito extension
-- Follow naming: `*Test` for test classes
-- Use `@DisplayName` for test descriptions
-- Mock all external dependencies
-
-### Error Handling
-- Use custom exception classes in `exception.custom` package
-- Implement global exception handler with consistent error responses
-- Return structured error DTOs with status, message, and details
-
-### Security & Validation
-- Use Spring Security with JWT authentication
-- Validate all inputs with Bean Validation
-- Implement role-based access control (USER, ADMIN)
-- Use enum-based status management
-
-### Naming Conventions
-- Classes: PascalCase (MessageService, UserRepository)
-- Methods: camelCase (sendMessage, getUserById)
-- Variables: camelCase (messageRepository, currentUser)
-- Constants: UPPER_SNAKE_CASE
-- Database: snake_case (messages, user_id, created_at)</content>
-<parameter name="filePath">C:\Users\Nico\Desktop\notification-hub\AGENTS.md
+## CI/CD Pipeline
+- **Validation**: Pushes to `main`/`develop` and PRs to `main` trigger tests (using MySQL 8.0) and **SonarCloud** quality gate analysis.
+- **Deployment**: Code merged to `main` is packaged into a `.jar` and automatically deployed to Railway (and optionally Azure Web Apps). Always ensure the build passes `verify` locally before pushing.

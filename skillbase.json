@@ -1,0 +1,39 @@
+{
+  "skills": [
+    {
+      "name": "java-21",
+      "source": "global",
+      "linked": false,
+      "version": null,
+      "installedAt": "2026-04-17T00:19:20.712Z"
+    },
+    {
+      "name": "java-spring",
+      "source": "global",
+      "linked": false,
+      "version": null,
+      "installedAt": "2026-04-17T00:19:20.715Z"
+    },
+    {
+      "name": "springboot-tdd",
+      "source": "global",
+      "linked": false,
+      "version": null,
+      "installedAt": "2026-04-17T00:19:20.718Z"
+    },
+    {
+      "name": "springboot-verification",
+      "source": "global",
+      "linked": false,
+      "version": null,
+      "installedAt": "2026-04-17T00:19:20.720Z"
+    },
+    {
+      "name": "docker-patterns",
+      "source": "global",
+      "linked": false,
+      "version": null,
+      "installedAt": "2026-04-17T00:19:20.723Z"
+    }
+  ]
+}
