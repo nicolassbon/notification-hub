@@ -29,6 +29,15 @@ class JwtPropertiesTest {
     }
 
     @Test
+    void throws_when_secret_is_null() {
+        JwtProperties jwtProperties = new JwtProperties(null, 3_600_000L);
+
+        assertThatThrownBy(jwtProperties::validateSecretAtStartup)
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("at least 32 bytes");
+    }
+
+    @Test
     void passes_when_secret_has_multibyte_chars_but_utf8_length_is_at_least_32_bytes() {
         JwtProperties jwtProperties = new JwtProperties(SECRET_WITH_32_UTF8_BYTES_AND_8_CHARS, 3_600_000L);
 

@@ -2,6 +2,7 @@ package com.notificationhub.exception.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.notificationhub.dto.request.LoginRequest;
+import com.notificationhub.dto.response.ErrorResponse;
 import com.notificationhub.exception.custom.InvalidCredentialsException;
 import com.notificationhub.exception.custom.MessageDeliveryException;
 import com.notificationhub.exception.custom.RateLimitExceededException;
@@ -9,6 +10,7 @@ import jakarta.validation.Valid;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -218,6 +221,19 @@ public class GlobalExceptionHandlerTest {
                 .andExpect(jsonPath("$.error").value("Bad Request"))
                 .andExpect(jsonPath("$.message").value("Malformed JSON request"))
                 .andExpect(jsonPath("$.timestamp").isNotEmpty());
+    }
+
+    @Test
+    @DisplayName("Should handle NoResourceFoundException and return 404 NOT_FOUND")
+    void handlesNoResourceFoundException() {
+        GlobalExceptionHandler handler = new GlobalExceptionHandler();
+
+        var response = handler.handleNoResourceFound();
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody())
+                .extracting(ErrorResponse::getStatus, ErrorResponse::getError, ErrorResponse::getMessage)
+                .containsExactly(404, "Not Found", "The requested resource was not found");
     }
 
     // ========== 5xx SERVER ERRORS ==========
