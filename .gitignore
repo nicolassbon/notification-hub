@@ -39,3 +39,6 @@ pom.xml.releaseBackup
 .vscode/
 .settings/
 .atl/
+
+# Personal docs 
+docs/
