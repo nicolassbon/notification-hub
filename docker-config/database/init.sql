@@ -1,1 +1,2 @@
-CREATE DATABASE notification_hub;
+-- Database initialization is handled by the PostgreSQL image via POSTGRES_DB.
+-- Keep this file for optional future setup steps.

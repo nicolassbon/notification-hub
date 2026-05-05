@@ -67,18 +67,11 @@ cd notification-hub
 Crea un archivo `.env` en la raíz del proyecto con las siguientes variables:
 
 ```env
-# Database MySQL (Development)
-MYSQL_ROOT_PASSWORD=root_password
-MYSQL_DATABASE=notification_hub
-DB_USER=app_user
-DB_PASS=app_password
-
-# Database PostgreSQL (Production)
+# Database PostgreSQL
 POSTGRES_DB=notification_hub
 POSTGRES_HOST=localhost
 POSTGRES_USER=app_user
 POSTGRES_PASSWORD=app_password
-POSTGRES_PORT=5432
 
 # JWT
 JWT_SECRET=tu-secreto-seguro-de-al-menos-256-bits-para-jwt
